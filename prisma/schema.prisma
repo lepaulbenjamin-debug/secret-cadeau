@@ -1,0 +1,102 @@
+// Secret Cadeau — tirage au sort et listes de cadeaux.
+//
+// Pas de compte ni de mot de passe : chacun reçoit un lien personnel
+// (`/p/<jeton>`), l'organisateur un lien d'administration (`/g/<jetonAdmin>`).
+// Le jeton EST l'identité : il ne doit jamais apparaître sur la page d'un autre.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Groupe {
+  id           String    @id @default(cuid())
+  nom          String
+  /// Jour de l'échange des cadeaux (affiché avec un compte à rebours).
+  dateEchange  DateTime?
+  /// Budget conseillé, en euros entiers.
+  budget       Int?
+  /// Mot de l'organisateur, affiché à tous.
+  message      String    @default("")
+  jetonAdmin   String    @unique
+  tirageLe     DateTime?
+  creeLe       DateTime  @default(now())
+
+  participants Participant[]
+  exclusions   Exclusion[]
+}
+
+model Participant {
+  id        String    @id @default(cuid())
+  groupeId  String
+  groupe    Groupe    @relation(fields: [groupeId], references: [id], onDelete: Cascade)
+  prenom    String
+  jeton     String    @unique
+  /// La personne à qui il offre. Fixée par le tirage, connue de lui seul.
+  destinataireId String?      @unique
+  destinataire   Participant? @relation("Tirage", fields: [destinataireId], references: [id], onDelete: SetNull)
+  offrePar       Participant? @relation("Tirage")
+  /// Première ouverture de son lien : l'organisateur sait qui l'a reçu.
+  ouvertLe  DateTime?
+  creeLe    DateTime  @default(now())
+
+  souhaits        Souhait[]  @relation("Proprietaire")
+  reservations    Souhait[]  @relation("Reservation")
+  questionsPosees Question[] @relation("Pere")
+  questionsRecues Question[] @relation("Destinataire")
+  exclusionsA     Exclusion[] @relation("ExclusionA")
+  exclusionsB     Exclusion[] @relation("ExclusionB")
+
+  @@index([groupeId])
+}
+
+/// Deux personnes qui ne doivent pas se tirer l'une l'autre (un couple…).
+/// Symétrique : on la range une seule fois.
+model Exclusion {
+  id       String      @id @default(cuid())
+  groupeId String
+  groupe   Groupe      @relation(fields: [groupeId], references: [id], onDelete: Cascade)
+  aId      String
+  a        Participant @relation("ExclusionA", fields: [aId], references: [id], onDelete: Cascade)
+  bId      String
+  b        Participant @relation("ExclusionB", fields: [bId], references: [id], onDelete: Cascade)
+
+  @@unique([aId, bId])
+  @@index([groupeId])
+}
+
+model Souhait {
+  id            String       @id @default(cuid())
+  participantId String
+  participant   Participant  @relation("Proprietaire", fields: [participantId], references: [id], onDelete: Cascade)
+  titre         String
+  lien          String       @default("")
+  /// En euros, facultatif.
+  prix          Int?
+  note          String       @default("")
+  /// Réservé par quelqu'un pour éviter les doublons. JAMAIS montré au propriétaire.
+  reserveParId  String?
+  reservePar    Participant? @relation("Reservation", fields: [reserveParId], references: [id], onDelete: SetNull)
+  creeLe        DateTime     @default(now())
+
+  @@index([participantId])
+}
+
+/// Question anonyme du Père Noël secret à son destinataire.
+model Question {
+  id             String      @id @default(cuid())
+  pereId         String
+  pere           Participant @relation("Pere", fields: [pereId], references: [id], onDelete: Cascade)
+  destinataireId String
+  destinataire   Participant @relation("Destinataire", fields: [destinataireId], references: [id], onDelete: Cascade)
+  texte          String
+  reponse        String      @default("")
+  creeLe         DateTime    @default(now())
+
+  @@index([destinataireId])
+  @@index([pereId])
+}

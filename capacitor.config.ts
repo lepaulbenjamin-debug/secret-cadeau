@@ -11,11 +11,16 @@ import type { CapacitorConfig } from "@capacitor/cli";
  * ⚠️ `appId` ne change plus jamais une fois publié : c'est l'identité de
  * l'application sur les deux stores.
  */
-const HOTE = process.env.HOTE_PUBLIC ?? "secret-cadeau.vercel.app";
+/*
+ * L'hôte qui SERT réellement le site : l'apex `quioffre.fr` (www y redirige).
+ * Pointer sur un hôte qui redirige coûterait une redirection à chaque lancement,
+ * et sortirait la navigation de la coquille vers le navigateur.
+ */
+const HOTE = process.env.HOTE_PUBLIC ?? "quioffre.fr";
 
 const config: CapacitorConfig = {
-  appId: "fr.secretcadeau.app",
-  appName: "Secret Cadeau",
+  appId: "fr.quioffre.app",
+  appName: "Qui Offre",
   webDir: "coquille",
   server: {
     url: `https://${HOTE}/`,

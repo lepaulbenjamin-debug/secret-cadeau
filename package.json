@@ -1,10 +1,10 @@
 {
-  "name": "secret-cadeau",
+  "name": "quioffre",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma migrate deploy && next build",
+    "build": "node scripts/migrer.mjs && next build",
     "build:local": "next build",
     "start": "next start",
     "lint": "eslint",

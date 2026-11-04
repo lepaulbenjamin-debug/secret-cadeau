@@ -15,7 +15,7 @@ export default function Accueil() {
     <main className="pt-10">
       <div className="flex items-center gap-2 text-cerise">
         <Gift size={28} />
-        <span className="font-titre text-lg font-semibold">Secret Cadeau</span>
+        <span className="font-titre text-lg font-semibold">Qui Offre</span>
       </div>
       <h1 className="mt-6 font-titre text-4xl font-bold leading-tight">
         Le Père Noël secret,<br />sans prise de tête.
@@ -24,7 +24,7 @@ export default function Accueil() {
         Tirez au sort, partagez vos listes d&apos;envies, et laissez la magie faire le reste.
       </p>
       <Link href="/nouveau" className="bouton bouton-cerise mt-6 w-full text-lg">
-        Organiser un Secret Cadeau
+        Organiser un tirage au sort
       </Link>
       <p className="mt-2 text-center text-sm text-doux">Vous avez reçu un lien ? Ouvrez-le simplement.</p>
 

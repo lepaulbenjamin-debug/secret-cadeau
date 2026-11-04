@@ -1,35 +1,56 @@
-# Mettre Secret Cadeau en ligne
+# Mettre Qui Offre en ligne
 
-Même parcours que Petsitia, en plus court : pas d'e-mails, pas de paiement.
+Coût : **0 €** (offres gratuites Neon et Vercel) + le nom de domaine (~10 €/an).
+Comptez 15 minutes pour les étapes 1 et 2, 10 minutes pour l'étape 3.
 
-## 1. La base de données (Neon)
+---
 
-1. Sur <https://neon.tech>, créez un projet `secret-cadeau`, région **Europe (Frankfurt)**.
-2. Copiez la *connection string* de la branche `production`.
+## 1. La base de données — Neon
 
-## 2. Le site (Vercel)
+1. Sur <https://console.neon.tech>, **New Project**.
+2. Nom : `quioffre`. Région : **AWS Europe Central 1 (Frankfurt)** — ne se change plus ensuite.
+3. Une fois créé, bouton **Connect** : copiez l'adresse qui commence par `postgresql://…`
+   (gardez-la de côté, c'est un mot de passe).
 
-1. Sur <https://vercel.com>, **Add New → Project**, importez le dépôt `secret-cadeau`.
-2. Dans **Environment Variables**, ajoutez `DATABASE_URL` = l'adresse Neon (environnement *Production*).
-3. **Deploy**. La commande de build applique les migrations (`prisma migrate deploy`) puis construit le site.
+## 2. Le site — Vercel
 
-⚠️ Ne mettez pas l'adresse de production dans l'environnement *Preview* : chaque branche poussée migrerait la vraie base. Créez plutôt une branche Neon `apercu` et donnez son adresse à *Preview*.
+1. Sur <https://vercel.com/new>, importez le dépôt GitHub **`secret-cadeau`**.
+   (Si Vercel ne le voit pas : *Adjust GitHub App Permissions* → autoriser ce dépôt.)
+2. Nom du projet : `quioffre`.
+3. Déroulez **Environment Variables** et ajoutez :
+   - Nom : `DATABASE_URL` — Valeur : l'adresse Neon de l'étape 1.
+4. **Deploy**. Au premier déploiement, la base est créée automatiquement (migrations).
+5. Le site répond sur `https://quioffre.vercel.app` (ou un nom proche que Vercel affiche).
+   Créez un groupe pour essayer.
 
-Le site est alors en ligne sur `secret-cadeau.vercel.app` (ou votre domaine : **Settings → Domains**).
+⚠️ La variable doit être réservée à l'environnement **Production** (c'est le cas si
+vous l'ajoutez à l'import ; sinon *Settings → Environment Variables*, décochez
+*Preview*). Sans cela, chaque branche poussée sur GitHub lirait les vrais groupes.
 
-## 3. Sur téléphone, sans store
+> Facultatif, pour essayer une branche avant de la fusionner : dans Neon, créez une
+> branche `apercu` et mettez son adresse dans `DATABASE_URL_APERCU`, environnement
+> **Preview** uniquement.
 
-Ouvrez le site dans Safari ou Chrome → **Partager → Sur l'écran d'accueil**. L'icône lance l'application en plein écran.
+## 3. Le nom de domaine — `quioffre.fr`
 
-## 4. Sur les stores (Capacitor)
+1. Achetez `quioffre.fr` chez OVH (le `.com` en plus si vous voulez le protéger).
+2. Dans Vercel : projet `quioffre` → **Settings → Domains** → ajoutez `quioffre.fr`.
+   Vercel propose d'ajouter aussi `www.quioffre.fr` en **redirection vers `quioffre.fr`** : acceptez.
+   ⚠️ C'est bien `quioffre.fr` (sans www) qui doit être l'adresse principale : l'application
+   mobile et les aperçus de liens sont réglés dessus.
+3. Vercel affiche les enregistrements DNS à créer (un `A` pour `quioffre.fr`, un `CNAME`
+   pour `www`). Dans OVH : **Noms de domaine → quioffre.fr → Zone DNS → Ajouter une entrée**,
+   recopiez exactement les valeurs données par Vercel, et supprimez les anciennes entrées
+   `A` / `CNAME` d'OVH pour ces mêmes noms.
+4. Attendez quelques minutes à quelques heures : Vercel passe au vert et installe le HTTPS tout seul.
 
-Si vous utilisez un domaine à vous, indiquez-le avant de construire :
+## 4. Sur téléphone, sans store
 
-```bash
-export HOTE_PUBLIC=www.votre-domaine.fr
-```
+Ouvrez le site dans Safari ou Chrome → **Partager → Sur l'écran d'accueil**.
 
-Puis, sur le Mac :
+## 5. Plus tard : les stores (Capacitor)
+
+Sur le Mac :
 
 ```bash
 npx cap add ios && npx cap add android
@@ -47,6 +68,6 @@ npx cap open ios        # Xcode → Archive → App Store Connect
 npx cap open android    # Android Studio → Build → Generate Signed Bundle
 ```
 
-Les icônes sont dans `public/` (`icone-1024.png` pour les stores) ; `node scripts/icones.mjs` les régénère depuis `src/app/icon.svg`.
+Icônes : `public/icone-1024.png` ; `node scripts/icones.mjs` les régénère depuis `src/app/icon.svg`.
 
-⚠️ L'identifiant `fr.secretcadeau.app` (dans `capacitor.config.ts`) ne doit plus changer après la première publication.
+⚠️ L'identifiant `fr.quioffre.app` (dans `capacitor.config.ts`) ne doit plus changer après la première publication.

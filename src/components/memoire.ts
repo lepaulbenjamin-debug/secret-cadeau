@@ -12,7 +12,7 @@ export type LienGarde = {
   vuLe: number;
 };
 
-const CLE = "secret-cadeau:liens";
+const CLE = "quioffre:liens";
 
 export function lireLiens(): LienGarde[] {
   try {

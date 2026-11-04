@@ -4,9 +4,9 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     // `id` fixe l'identité de l'application installée : ne plus jamais le changer.
     id: "/",
-    name: "Secret Cadeau",
-    short_name: "Secret Cadeau",
-    description: "Tirage au sort du Père Noël secret et listes de cadeaux partagées.",
+    name: "Qui Offre",
+    short_name: "Qui Offre",
+    description: "Qui offre à qui ? Tirage au sort du Père Noël secret et listes de cadeaux partagées.",
     start_url: "/",
     scope: "/",
     display: "standalone",

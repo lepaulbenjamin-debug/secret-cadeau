@@ -12,10 +12,10 @@ export function Partager({ chemin, prenom, groupe, compact = false }: { chemin: 
 
   const partager = async () => {
     const url = new URL(chemin, window.location.origin).toString();
-    const texte = `🎁 ${prenom}, voici ton lien pour le Secret Cadeau « ${groupe} ». Il est personnel, ne le transfère pas !`;
+    const texte = `🎁 ${prenom}, voici ton lien pour le tirage « ${groupe} » sur Qui Offre. Il est personnel, ne le transfère pas !`;
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Secret Cadeau", text: texte, url });
+        await navigator.share({ title: "Qui Offre", text: texte, url });
         return;
       } catch (e) {
         if ((e as Error).name === "AbortError") return;

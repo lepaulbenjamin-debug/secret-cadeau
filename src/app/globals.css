@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/*
+ * Crème, sapin et cerise. Des couleurs de fête sans guirlande clignotante :
+ * l'écran doit rester lisible le soir du 24, lumière tamisée.
+ */
+:root {
+  --creme: #f8f2e7;
+  --carte: #fffdf8;
+  --encre: #2b1f1a;
+  --doux: #6f625a;
+  --trait: #e6dccb;
+  --sapin: #1e4d3b;
+  --sapin-clair: #e3eee8;
+  --cerise: #b7322c;
+  --cerise-clair: #f8e4e1;
+  --or: #b8892b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --creme: #17130f;
+    --carte: #221c17;
+    --encre: #f3ebdf;
+    --doux: #b3a596;
+    --trait: #3a3028;
+    --sapin: #6fbf98;
+    --sapin-clair: #1f3329;
+    --cerise: #ef7a70;
+    --cerise-clair: #3b201d;
+    --or: #e0b558;
+  }
+}
+
+@theme inline {
+  --color-creme: var(--creme);
+  --color-carte: var(--carte);
+  --color-encre: var(--encre);
+  --color-doux: var(--doux);
+  --color-trait: var(--trait);
+  --color-sapin: var(--sapin);
+  --color-sapin-clair: var(--sapin-clair);
+  --color-cerise: var(--cerise);
+  --color-cerise-clair: var(--cerise-clair);
+  --color-or: var(--or);
+  --font-sans: var(--font-texte), system-ui, sans-serif;
+  --font-titre: var(--font-titre), Georgia, serif;
+}
+
+html {
+  background: var(--creme);
+  color: var(--encre);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--creme);
+  min-height: 100dvh;
+  /* La coquille des stores occupe tout l'écran : on rend la place de l'encoche. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.carte {
+  background: var(--carte);
+  border: 1px solid var(--trait);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+}
+
+.champ {
+  width: 100%;
+  border: 1px solid var(--trait);
+  background: var(--carte);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  font-size: 1rem; /* 16px : iOS ne zoome pas sur le champ */
+  color: var(--encre);
+}
+.champ:focus {
+  outline: 2px solid var(--sapin);
+  outline-offset: 1px;
+}
+
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  background: var(--sapin);
+  color: var(--carte);
+  transition: transform 0.1s, opacity 0.2s;
+}
+.bouton:active { transform: scale(0.97); }
+.bouton:disabled { opacity: 0.55; }
+.bouton-cerise { background: var(--cerise); }
+.bouton-discret {
+  background: transparent;
+  color: var(--encre);
+  border: 1px solid var(--trait);
+}
+
+.etiquette {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+@keyframes apparition {
+  from { opacity: 0; transform: scale(0.85) rotate(-3deg); }
+  to { opacity: 1; transform: none; }
+}
+.apparition { animation: apparition 0.6s cubic-bezier(.2,1.4,.4,1) both; }
+
+@keyframes flocon {
+  to { transform: translateY(110dvh) rotate(360deg); }
+}

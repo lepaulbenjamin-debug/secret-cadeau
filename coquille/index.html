@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Secret Cadeau</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; min-height: 100dvh; display: grid; place-items: center; text-align: center;
+         font-family: system-ui, sans-serif; background: #f8f2e7; color: #2b1f1a; padding: 24px; box-sizing: border-box; }
+  @media (prefers-color-scheme: dark) { body { background: #17130f; color: #f3ebdf; } }
+  button { margin-top: 16px; border: 0; border-radius: 999px; padding: 12px 22px; font-size: 16px; font-weight: 600; background: #1e4d3b; color: #fff; }
+</style>
+</head>
+<body>
+  <div>
+    <div style="font-size:56px">🎁</div>
+    <h1 style="font-size:22px">Pas de connexion</h1>
+    <p>Secret Cadeau a besoin d'internet pour retrouver votre groupe.</p>
+    <button onclick="location.reload()">Réessayer</button>
+  </div>
+</body>
+</html>

@@ -9,13 +9,7 @@ import "@fontsource-variable/fraunces";
 import "@fontsource-variable/inter";
 import "./globals.css";
 import { affiliationActive, MENTION_AMAZON } from "@/lib/affiliation";
-
-/*
- * L'adresse publique, écrite en dur : lue dans l'environnement, elle suivrait
- * les déploiements d'aperçu, et les aperçus de liens (WhatsApp, SMS) pointeraient
- * vers une adresse Vercel temporaire.
- */
-const SITE_URL = "https://www.quioffre.fr";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

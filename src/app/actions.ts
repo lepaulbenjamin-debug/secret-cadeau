@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 import { groupeParJetonAdmin, participantParJeton } from "@/lib/acces";
 import { deplierLienCourt } from "@/lib/affiliation";
@@ -9,6 +10,7 @@ import { lienSur, lirePrenoms } from "@/lib/format";
 import { nouveauJeton } from "@/lib/jeton";
 import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
 import { prisma } from "@/lib/prisma";
+import { envoyerRappels } from "@/lib/rappels-serveur";
 import { tirer } from "@/lib/tirage";
 
 export type Etat = { erreur?: string; ok?: string } | null;
@@ -151,6 +153,8 @@ export async function lancerTirage(jetonAdmin: string, _etat: Etat, f: FormData)
     ...[...resultat].map(([de, pour]) => prisma.participant.update({ where: { id: de }, data: { destinataireId: pour } })),
     prisma.groupe.update({ where: { id: groupe.id }, data: { tirageLe: new Date() } }),
   ]);
+  // L'e-mail « le tirage est fait » part après la réponse : l'organisateur n'attend pas les envois.
+  after(() => envoyerRappels({ groupeId: groupe.id }).then((b) => console.log("Rappels du tirage :", JSON.stringify(b))));
   revalidatePath("/", "layout");
   return { ok: "Le tirage est fait ! Chacun découvre sa personne en ouvrant son lien." };
 }
@@ -160,6 +164,8 @@ export async function annulerTirage(jetonAdmin: string) {
   await prisma.$transaction([
     // Les questions s'adressaient à un Père Noël qui n'est plus le bon.
     prisma.question.deleteMany({ where: { pere: { groupeId: groupe.id } } }),
+    // Un nouveau tirage mérite un nouvel e-mail « le tirage est fait ».
+    prisma.rappel.deleteMany({ where: { type: "tirage", participant: { groupeId: groupe.id } } }),
     prisma.participant.updateMany({ where: { groupeId: groupe.id }, data: { destinataireId: null } }),
     prisma.groupe.update({ where: { id: groupe.id }, data: { tirageLe: null } }),
   ]);
@@ -232,7 +238,7 @@ export async function modifierCoordonnees(jeton: string, _: Etat, f: FormData): 
   const moi = await participantParJeton(jeton);
   const coordonnees = lireCoordonnees(f);
   if ("erreur" in coordonnees) return coordonnees;
-  await prisma.participant.update({ where: { id: moi.id }, data: coordonnees });
+  await prisma.participant.update({ where: { id: moi.id }, data: { ...coordonnees, rappelsEmail: f.get("rappelsEmail") === "on" } });
   revalidatePath("/", "layout");
   return { ok: "Coordonnées enregistrées." };
 }

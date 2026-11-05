@@ -43,8 +43,8 @@
   --color-cerise: var(--cerise);
   --color-cerise-clair: var(--cerise-clair);
   --color-or: var(--or);
-  --font-sans: var(--font-texte), system-ui, sans-serif;
-  --font-titre: var(--font-titre), Georgia, serif;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-titre: "Fraunces Variable", Georgia, serif;
 }
 
 html {

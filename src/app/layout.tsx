@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter } from "next/font/google";
-
+/*
+ * Les polices sont embarquées dans l'application (paquets Fontsource), pas
+ * téléchargées chez Google au moment de la construction : sur Vercel, le
+ * chargement de Fraunces par `next/font/google` faisait échouer le build.
+ * Embarquées, elles ne dépendent plus d'aucun service extérieur.
+ */
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/inter";
 import "./globals.css";
-
-const titre = Fraunces({ variable: "--font-titre", subsets: ["latin"], weight: ["600", "700"] });
-const texte = Inter({ variable: "--font-texte", subsets: ["latin"] });
 
 /*
  * L'adresse publique, écrite en dur : lue dans l'environnement, elle suivrait
@@ -41,7 +44,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${titre.variable} ${texte.variable}`}>
+    <html lang="fr">
       <body className="font-sans antialiased">
         <div className="mx-auto w-full max-w-xl px-4 pb-16">{children}</div>
       </body>

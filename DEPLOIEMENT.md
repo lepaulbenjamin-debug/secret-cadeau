@@ -44,11 +44,32 @@ vous l'ajoutez à l'import ; sinon *Settings → Environment Variables*, décoch
    `A` / `CNAME` d'OVH pour ces mêmes noms.
 4. Attendez quelques minutes à quelques heures : Vercel passe au vert et installe le HTTPS tout seul.
 
-## 4. Sur téléphone, sans store
+## 4. Les liens affiliés Amazon (facultatif)
+
+Quand quelqu'un colle un lien Amazon dans sa liste, le lien **affiché** porte votre
+identifiant Partenaires (celui d'un tiers éventuel est remplacé). La base garde le
+lien d'origine : changer d'identifiant vaut aussitôt pour toutes les listes.
+
+1. Inscrivez-vous au programme **Partenaires Amazon** (<https://partenaires.amazon.fr>)
+   et déclarez-y le site `quioffre.fr`. Vous obtenez un identifiant du type `quioffre-21`.
+2. Dans Vercel → **Settings → Environment Variables**, ajoutez `AMAZON_TAG_FR` = votre
+   identifiant (environnement **Production**), puis **Redeploy**.
+3. Pour d'autres boutiques, une variable chacune : `AMAZON_TAG_DE`, `AMAZON_TAG_IT`,
+   `AMAZON_TAG_ES`, `AMAZON_TAG_CO_UK`, `AMAZON_TAG_COM`… (un identifiant ne vaut que
+   pour sa boutique).
+
+La mention obligatoire « En tant que Partenaire Amazon, Qui Offre réalise un bénéfice
+sur les achats remplissant les conditions requises » s'affiche alors en bas de chaque page.
+Sans variable, rien ne change.
+
+⚠️ Revenus d'affiliation = usage commercial : l'offre gratuite de Vercel (Hobby) ne
+l'autorise pas, il faut passer à l'offre Pro.
+
+## 5. Sur téléphone, sans store
 
 Ouvrez le site dans Safari ou Chrome → **Partager → Sur l'écran d'accueil**.
 
-## 5. Plus tard : les stores (Capacitor)
+## 6. Plus tard : les stores (Capacitor)
 
 Sur le Mac :
 

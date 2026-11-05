@@ -22,7 +22,7 @@ import { NOM_SITE, SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   title: { absolute: "Qui Offre — Secret Santa en ligne gratuit : tirage au sort et listes de cadeaux" },
   description:
-    "Organisez votre Secret Santa (Père Noël secret) en 2 minutes : tirage au sort en ligne avec exclusions, listes de cadeaux partagées, réservations sans doublon, questions anonymes et rappels. Gratuit, sans compte.",
+    "Organisez votre Secret Santa en 2 minutes : tirage au sort en ligne avec exclusions, listes de cadeaux partagées et rappels. Gratuit, sans compte.",
   alternates: { canonical: "/" },
 };
 

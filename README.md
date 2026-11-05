@@ -18,6 +18,9 @@
 - **Suivi pour l'organisateur** : qui a ouvert son lien, combien d'idées — sans jamais voir le tirage.
 - **Sur cet appareil** : les liens ouverts sont retrouvés depuis l'accueil.
 
+- **Rappels par e-mail** : au tirage, une semaine avant et la veille (`src/lib/rappels.ts`, tâche quotidienne `/api/cron/rappels`), désinscription en un clic.
+- **Site public** optimisé pour le référencement classique et par les assistants d'IA : guides (`src/app/(site)`), `sitemap.xml`, `robots.txt`, `llms.txt`, données structurées.
+
 ## Technique
 
 Next.js 16 (actions serveur), Prisma + PostgreSQL (Neon), Tailwind 4, hébergement Vercel. Installable depuis le navigateur (PWA) ; coquille Capacitor prête pour les stores.

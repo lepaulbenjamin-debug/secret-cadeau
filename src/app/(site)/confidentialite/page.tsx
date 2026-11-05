@@ -24,12 +24,12 @@ export default function Confidentialite() {
         </p>
       }
     >
-      <h2>Qui est responsable de vos données ?</h2>
+      <h2>Qui est responsable de vos données ?</h2>
       <p>
         {EDITEUR.nom}, joignable à l&apos;adresse {EDITEUR.contact}. Voir aussi les <Link href="/mentions-legales">mentions légales</Link>.
       </p>
 
-      <h2>Quelles données, et pourquoi ?</h2>
+      <h2>Quelles données, et pourquoi ?</h2>
       <table>
         <thead>
           <tr><th>Donnée</th><th>À quoi elle sert</th><th>Qui la voit</th></tr>
@@ -66,7 +66,7 @@ export default function Confidentialite() {
         de confidentialité de cette boutique qui s&apos;applique.
       </p>
 
-      <h2>Combien de temps ?</h2>
+      <h2>Combien de temps ?</h2>
       <p>
         Les données d&apos;un groupe sont conservées tant que le groupe existe. L&apos;organisateur peut retirer un participant
         (ses données et sa liste sont alors effacées) ; vous pouvez aussi nous demander la suppression d&apos;un groupe ou de vos

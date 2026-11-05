@@ -15,7 +15,7 @@ import { affiliationActive, MENTION_AMAZON } from "@/lib/affiliation";
  * les déploiements d'aperçu, et les aperçus de liens (WhatsApp, SMS) pointeraient
  * vers une adresse Vercel temporaire.
  */
-const SITE_URL = "https://quioffre.fr";
+const SITE_URL = "https://www.quioffre.fr";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

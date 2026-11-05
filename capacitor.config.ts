@@ -12,11 +12,11 @@ import type { CapacitorConfig } from "@capacitor/cli";
  * l'application sur les deux stores.
  */
 /*
- * L'hôte qui SERT réellement le site : l'apex `quioffre.fr` (www y redirige).
- * Pointer sur un hôte qui redirige coûterait une redirection à chaque lancement,
- * et sortirait la navigation de la coquille vers le navigateur.
+ * L'hôte qui SERT réellement le site : `www.quioffre.fr` (l'apex y redirige en
+ * 308, réglage Vercel). Pointer sur l'apex coûterait une redirection à chaque
+ * lancement, et sortirait la navigation de la coquille vers le navigateur.
  */
-const HOTE = process.env.HOTE_PUBLIC ?? "quioffre.fr";
+const HOTE = process.env.HOTE_PUBLIC ?? "www.quioffre.fr";
 
 const config: CapacitorConfig = {
   appId: "fr.quioffre.app",

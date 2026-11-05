@@ -255,7 +255,7 @@ export async function apercuDuLien(
         redirect: "manual",
         signal: AbortSignal.timeout(6000),
         headers: {
-          "user-agent": "Mozilla/5.0 (compatible; QuiOffreBot/1.0; +https://quioffre.fr)",
+          "user-agent": "Mozilla/5.0 (compatible; QuiOffreBot/1.0; +https://www.quioffre.fr)",
           accept: "text/html,application/xhtml+xml",
           "accept-language": "fr-FR,fr;q=0.9",
         },

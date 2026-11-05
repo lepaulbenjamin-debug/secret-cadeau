@@ -35,9 +35,10 @@ vous l'ajoutez à l'import ; sinon *Settings → Environment Variables*, décoch
 
 1. Achetez `quioffre.fr` chez OVH (le `.com` en plus si vous voulez le protéger).
 2. Dans Vercel : projet `quioffre` → **Settings → Domains** → ajoutez `quioffre.fr`.
-   Vercel propose d'ajouter aussi `www.quioffre.fr` en **redirection vers `quioffre.fr`** : acceptez.
-   ⚠️ C'est bien `quioffre.fr` (sans www) qui doit être l'adresse principale : l'application
-   mobile et les aperçus de liens sont réglés dessus.
+   Vercel ajoute `www.quioffre.fr` et fait **rediriger `quioffre.fr` vers `www.quioffre.fr`** : gardez ce réglage.
+   ⚠️ C'est `www.quioffre.fr` qui est l'adresse principale : l'application mobile
+   (`capacitor.config.ts`) et les aperçus de liens (`layout.tsx`) sont réglés dessus.
+   Si un jour vous inversez dans Vercel, changez-les aussi.
 3. Vercel affiche les enregistrements DNS à créer (un `A` pour `quioffre.fr`, un `CNAME`
    pour `www`). Dans OVH : **Noms de domaine → quioffre.fr → Zone DNS → Ajouter une entrée**,
    recopiez exactement les valeurs données par Vercel, et supprimez les anciennes entrées

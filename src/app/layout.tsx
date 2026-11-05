@@ -41,11 +41,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <body className="font-sans antialiased">
-        <div className="mx-auto w-full max-w-xl px-4 pb-16">
-          {children}
-          {/* Mention exigée par le programme Partenaires Amazon, visible sur toutes les pages. */}
-          {affiliationActive() && <p className="mt-10 text-center text-xs text-doux">{MENTION_AMAZON}</p>}
-        </div>
+        {children}
+        {/* Mention exigée par le programme Partenaires Amazon, visible sur toutes les pages. */}
+        {affiliationActive() && <p className="mx-auto max-w-xl px-4 pb-10 text-center text-xs text-doux">{MENTION_AMAZON}</p>}
       </body>
     </html>
   );

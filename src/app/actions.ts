@@ -40,10 +40,11 @@ export async function creerGroupe(_: unknown, f: FormData): Promise<GroupeCree> 
   if (!nom) return { erreur: "Donnez un nom au groupe." };
   if (participe && !organisateur) return { erreur: "Indiquez votre prénom." };
 
+  // La liste peut rester vide : chacun peut s'inscrire avec le lien d'invitation.
+  // Le minimum de trois participants est exigé au tirage, pas ici.
   const prenoms = participe
     ? [organisateur, ...autres.filter((p) => p.toLowerCase() !== organisateur.toLowerCase())]
     : autres;
-  if (prenoms.length < 3) return { erreur: "Il faut au moins trois participants pour garder le secret." };
   if (prenoms.length > MAX_PARTICIPANTS) return { erreur: `${MAX_PARTICIPANTS} participants au maximum.` };
 
   const groupe = await prisma.groupe.create({
@@ -53,6 +54,7 @@ export async function creerGroupe(_: unknown, f: FormData): Promise<GroupeCree> 
       budget: entierPositif(texte(f, "budget", 10)),
       message: texte(f, "message", 500),
       jetonAdmin: nouveauJeton(),
+      jetonInvitation: nouveauJeton(),
       participants: { create: prenoms.map((prenom) => ({ prenom, jeton: nouveauJeton() })) },
     },
     include: { participants: { orderBy: { creeLe: "asc" } } },
@@ -145,6 +147,58 @@ export async function annulerTirage(jetonAdmin: string) {
     prisma.groupe.update({ where: { id: groupe.id }, data: { tirageLe: null } }),
   ]);
   revalidatePath("/", "layout");
+}
+
+/** Un nouveau lien d'invitation : l'ancien cesse de marcher (utile s'il a trop circulé). */
+export async function regenererInvitation(jetonAdmin: string) {
+  const groupe = await groupeParJetonAdmin(jetonAdmin);
+  await prisma.groupe.update({ where: { id: groupe.id }, data: { jetonInvitation: nouveauJeton() } });
+  revalidatePath(`/g/${jetonAdmin}`);
+}
+
+/* ─────────────────────────────── Inscription et coordonnées ─────────────────────────────── */
+
+function lireCoordonnees(f: FormData): { email: string; telephone: string } | { erreur: string } {
+  const email = texte(f, "email", 120).toLowerCase();
+  const telephone = texte(f, "telephone", 30).replace(/[^\d+]/g, "");
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { erreur: "Cette adresse e-mail ne semble pas valide." };
+  if (telephone && !/^\+?\d{6,15}$/.test(telephone)) return { erreur: "Ce numéro de téléphone ne semble pas valide." };
+  return { email, telephone };
+}
+
+export type Inscription = { jeton: string; nom: string; prenom: string } | { erreur: string };
+
+export async function rejoindreGroupe(jetonInvitation: string, _: unknown, f: FormData): Promise<Inscription> {
+  const groupe = await prisma.groupe.findUnique({
+    where: { jetonInvitation },
+    include: { participants: { select: { prenom: true } } },
+  });
+  if (!groupe) return { erreur: "Ce lien d'invitation n'est plus valable. Demandez-en un nouveau à l'organisateur." };
+  if (groupe.tirageLe) return { erreur: "Le tirage est déjà fait : demandez à l'organisateur de vous ajouter." };
+  if (groupe.participants.length >= MAX_PARTICIPANTS) return { erreur: "Le groupe est complet." };
+
+  const prenom = lirePrenoms(texte(f, "prenom", 40))[0];
+  if (!prenom) return { erreur: "Indiquez votre prénom." };
+  if (groupe.participants.some((p) => p.prenom.toLowerCase() === prenom.toLowerCase())) {
+    return { erreur: `Il y a déjà un « ${prenom} » dans le groupe. Ajoutez l'initiale de votre nom (ex. « ${prenom} B. »). Si c'est vous, retrouvez votre lien auprès de l'organisateur.` };
+  }
+  const coordonnees = lireCoordonnees(f);
+  if ("erreur" in coordonnees) return coordonnees;
+
+  const p = await prisma.participant.create({
+    data: { groupeId: groupe.id, prenom, jeton: nouveauJeton(), ...coordonnees },
+  });
+  revalidatePath("/", "layout");
+  return { jeton: p.jeton, nom: groupe.nom, prenom };
+}
+
+export async function modifierCoordonnees(jeton: string, _: Etat, f: FormData): Promise<Etat> {
+  const moi = await participantParJeton(jeton);
+  const coordonnees = lireCoordonnees(f);
+  if ("erreur" in coordonnees) return coordonnees;
+  await prisma.participant.update({ where: { id: moi.id }, data: coordonnees });
+  revalidatePath("/", "layout");
+  return { ok: "Coordonnées enregistrées." };
 }
 
 /* ─────────────────────────────── Liste de souhaits ─────────────────────────────── */

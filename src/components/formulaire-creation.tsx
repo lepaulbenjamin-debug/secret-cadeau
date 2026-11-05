@@ -35,9 +35,11 @@ export function FormulaireCreation() {
       </div>
 
       <div>
-        <label className="etiquette" htmlFor="participants">Les autres participants</label>
-        <textarea id="participants" name="participants" rows={6} className="champ" placeholder={"Un prénom par ligne\nLéa\nTom\nMamie Jo"} />
-        <p className="mt-1 text-sm text-doux">Au moins trois personnes en tout. Vous pourrez en ajouter ensuite.</p>
+        <label className="etiquette" htmlFor="participants">Les autres participants <span className="font-normal text-doux">(facultatif)</span></label>
+        <textarea id="participants" name="participants" rows={5} className="champ" placeholder={"Un prénom par ligne\nLéa\nTom\nMamie Jo"} />
+        <p className="mt-1 text-sm text-doux">
+          Ou laissez vide : vous recevrez un <strong>lien d&apos;invitation</strong> pour que chacun s&apos;inscrive lui-même.
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">

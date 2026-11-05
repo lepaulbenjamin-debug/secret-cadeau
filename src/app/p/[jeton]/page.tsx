@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ajouterSouhait,
   basculerReservation,
+  modifierCoordonnees,
   modifierSouhait,
   poserQuestion,
   repondreQuestion,
@@ -12,6 +13,7 @@ import {
 } from "@/app/actions";
 import { BoutonAction } from "@/components/bouton-action";
 import { ChampsSouhait } from "@/components/champs-souhait";
+import { CopierLien } from "@/components/copier-lien";
 import { Formulaire } from "@/components/formulaire";
 import { Revelation } from "@/components/revelation";
 import { SeSouvenir } from "@/components/se-souvenir";
@@ -24,8 +26,15 @@ export const metadata: Metadata = { title: "Mon espace", robots: { index: false,
 
 const champsSouhait = { id: true, titre: true, lien: true, image: true, prix: true, note: true, reserveParId: true } as const;
 
-export default async function EspacePerso({ params }: { params: Promise<{ jeton: string }> }) {
+export default async function EspacePerso({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ jeton: string }>;
+  searchParams: Promise<{ bienvenue?: string }>;
+}) {
   const { jeton } = await params;
+  const { bienvenue } = await searchParams;
   const moi = await participantOu404(jeton);
   const groupe = moi.groupe;
 
@@ -81,6 +90,17 @@ export default async function EspacePerso({ params }: { params: Promise<{ jeton:
         </div>
         {groupe.message && <p className="carte mt-4 !py-3 text-sm italic">« {groupe.message} »</p>}
       </header>
+
+      {bienvenue && (
+        <div className="carte border-or/50 bg-[color-mix(in_oklab,var(--or)_10%,var(--carte))]">
+          <p className="font-semibold">🎉 Vous êtes inscrit·e !</p>
+          <p className="mt-1 text-sm">
+            Cette page est <strong>votre espace personnel</strong> : vous y découvrirez à qui vous offrez après le tirage.
+            Elle est retenue sur cet appareil ; gardez aussi le lien pour l&apos;ouvrir ailleurs.
+          </p>
+          <div className="mt-3"><CopierLien chemin={`/p/${jeton}`} libelle="Copier mon lien" /></div>
+        </div>
+      )}
 
       {/* Ma personne */}
       {destinataire ? (
@@ -192,6 +212,24 @@ export default async function EspacePerso({ params }: { params: Promise<{ jeton:
           </Formulaire>
         </div>
       </section>
+
+      {/* Mes coordonnées */}
+      <details className="carte">
+        <summary className="cursor-pointer font-titre text-xl font-semibold">Mes coordonnées</summary>
+        <p className="mt-2 text-sm text-doux">Visibles uniquement par l&apos;organisateur, pour vous renvoyer votre lien si vous le perdez.</p>
+        <div className="mt-3">
+          <Formulaire key="coordonnees" action={modifierCoordonnees.bind(null, jeton)} bouton="Enregistrer">
+            <div>
+              <label className="etiquette" htmlFor="email">E-mail</label>
+              <input id="email" name="email" type="email" className="champ" defaultValue={moi.email} maxLength={120} autoComplete="email" />
+            </div>
+            <div>
+              <label className="etiquette" htmlFor="telephone">Téléphone</label>
+              <input id="telephone" name="telephone" type="tel" className="champ" defaultValue={moi.telephone} maxLength={30} autoComplete="tel" />
+            </div>
+          </Formulaire>
+        </div>
+      </details>
 
       {/* Les autres listes */}
       {restants.length > 0 && (

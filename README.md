@@ -5,11 +5,12 @@
 ## Ce que ça fait
 
 - **Créer un groupe** en deux minutes : nom, date de l'échange, budget, prénoms des participants. Aucun compte à créer.
-- **Un lien personnel par participant**, à envoyer par SMS / WhatsApp / e-mail depuis le bouton « Envoyer ».
+- **Lien d'invitation** : un seul lien pour le groupe, chacun s'inscrit avec son prénom, son e-mail et son téléphone (visibles de l'organisateur seul).
+- **Un lien personnel par participant**, envoyé depuis le bouton « Envoyer », ou en SMS / e-mail prérempli quand la personne a laissé ses coordonnées.
 - **Exclusions** : les couples ne se tirent pas l'un l'autre.
 - **Tirage au sort** : personne ne se tire soi-même ; si les exclusions le rendent impossible, on le dit.
 - **Révélation** : chacun découvre à qui il offre en « ouvrant le paquet ».
-- **Listes d'envies** (titre, lien, prix, précision), visibles par tout le groupe.
+- **Listes d'envies** (titre, lien, image, prix, précision), visibles par tout le groupe. **Coller un lien remplit l'idée** (titre, image, prix) quand le site les publie ; pour Amazon, titre tiré de l'adresse (`src/lib/apercu.ts`).
 - **Réservations sans doublon** : « Je m'en occupe ». Le propriétaire de la liste ne le voit **jamais**.
 - **Questions anonymes** à la personne qu'on a tirée.
 - **Liens affiliés Amazon** : les liens Amazon des listes portent notre identifiant Partenaires (`src/lib/affiliation.ts`, variable `AMAZON_TAG_FR`).

@@ -46,10 +46,18 @@ export default async function Rejoindre({ params }: { params: Promise<{ jeton: s
         </div>
       )}
 
+      {groupe.nomsDeCode && (
+        <p className="carte text-center text-sm">
+          🕵️ <strong>Mode mystère</strong> : vous recevrez un nom de code marrant, et vous offrirez à un nom de code sans
+          savoir qui c&apos;est. Pensez à remplir votre liste, c&apos;est obligatoire !
+        </p>
+      )}
       {groupe.participants.length > 0 && (
         <p className="flex items-start justify-center gap-1.5 text-center text-sm text-doux">
           <Users size={15} className="mt-0.5 shrink-0" />
-          Déjà inscrits : {groupe.participants.map((p) => p.prenom).join(", ")}
+          {groupe.nomsDeCode
+            ? `Déjà ${groupe.participants.length} inscrit${groupe.participants.length > 1 ? "s" : ""}`
+            : `Déjà inscrits : ${groupe.participants.map((p) => p.prenom).join(", ")}`}
         </p>
       )}
       <p className="text-center text-sm"><Link href="/" className="text-doux underline">Qu&apos;est-ce que Qui Offre ?</Link></p>

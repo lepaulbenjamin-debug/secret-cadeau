@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ajouterSouhait,
   basculerReservation,
+  changerNomDeCode,
   modifierCoordonnees,
   modifierSouhait,
   poserQuestion,
@@ -18,7 +19,7 @@ import { Formulaire } from "@/components/formulaire";
 import { Revelation } from "@/components/revelation";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { Souhait, type SouhaitAffiche } from "@/components/souhait";
-import { participantOu404 } from "@/lib/acces";
+import { assurerNomsDeCode, nomVisible, participantOu404 } from "@/lib/acces";
 import { compteARebours, dateLongue } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
@@ -40,6 +41,11 @@ export default async function EspacePerso({
 
   if (!moi.ouvertLe) await prisma.participant.update({ where: { id: moi.id }, data: { ouvertLe: new Date() } });
 
+  const anonyme = groupe.nomsDeCode;
+  await assurerNomsDeCode(groupe.id);
+  const monNomDeCode =
+    moi.nomDeCode || (await prisma.participant.findUnique({ where: { id: moi.id }, select: { nomDeCode: true } }))!.nomDeCode;
+
   const [mesSouhaits, autres, questionsRecues, questionsPosees] = await Promise.all([
     // Ma liste : sans `reserveParId`, je ne dois pas savoir ce qu'on m'offre.
     prisma.souhait.findMany({
@@ -51,14 +57,18 @@ export default async function EspacePerso({
     prisma.participant.findMany({
       where: { groupeId: groupe.id, id: { not: moi.id } },
       orderBy: { prenom: "asc" },
-      select: { id: true, prenom: true, souhaits: { orderBy: { creeLe: "asc" }, select: champsSouhait } },
+      select: { id: true, prenom: true, nomDeCode: true, souhaits: { orderBy: { creeLe: "asc" }, select: champsSouhait } },
     }),
     prisma.question.findMany({ where: { destinataireId: moi.id }, orderBy: { creeLe: "asc" } }),
     prisma.question.findMany({ where: { pereId: moi.id }, orderBy: { creeLe: "asc" } }),
   ]);
 
   const destinataire = autres.find((p) => p.id === moi.destinataireId) ?? null;
-  const restants = autres.filter((p) => p.id !== moi.destinataireId);
+  // En mode mystère, les autres ne sont que des noms de code — triés comme tels,
+  // pour que l'ordre alphabétique des vrais prénoms ne trahisse rien.
+  const restants = autres
+    .filter((p) => p.id !== moi.destinataireId)
+    .sort((a, b) => nomVisible(a, anonyme).localeCompare(nomVisible(b, anonyme), "fr"));
   const rebours = groupe.dateEchange ? compteARebours(groupe.dateEchange) : null;
 
   const pied = (s: SouhaitAffiche & { reserveParId: string | null }) => {
@@ -91,6 +101,25 @@ export default async function EspacePerso({
         {groupe.message && <p className="carte mt-4 !py-3 text-sm italic">« {groupe.message} »</p>}
       </header>
 
+      {anonyme && (
+        <section className="carte text-center">
+          <p className="text-sm font-semibold tracking-wide text-cerise uppercase">🕵️ Mode mystère</p>
+          <p className="mt-1 text-sm text-doux">Pour les autres, vous êtes</p>
+          <p className="font-titre text-2xl font-bold">{monNomDeCode}</p>
+          <p className="mt-2 text-sm text-doux">
+            Retenez-le : le jour J, votre cadeau portera ce nom. Votre Père Noël ne sait pas qui vous êtes, il choisira
+            uniquement d&apos;après votre liste.
+          </p>
+          {!groupe.tirageLe && (
+            <div className="mt-3">
+              <BoutonAction action={changerNomDeCode.bind(null, jeton)} className="bouton bouton-discret !min-h-9 text-sm">
+                🎲 Tirer un autre nom de code
+              </BoutonAction>
+            </div>
+          )}
+        </section>
+      )}
+
       {bienvenue && (
         <div className="carte border-or/50 bg-[color-mix(in_oklab,var(--or)_10%,var(--carte))]">
           <p className="font-semibold">🎉 Vous êtes inscrit·e !</p>
@@ -105,7 +134,7 @@ export default async function EspacePerso({
       {/* Ma personne */}
       {destinataire ? (
         <section className="space-y-4">
-          <Revelation prenom={destinataire.prenom} />
+          <Revelation prenom={nomVisible(destinataire, anonyme)} mystere={anonyme} />
 
           <div className="carte">
             <h2 className="flex items-center gap-2 font-titre text-xl font-semibold"><Gift size={20} /> Ses idées</h2>
@@ -176,6 +205,12 @@ export default async function EspacePerso({
       <section className="carte">
         <h2 className="font-titre text-xl font-semibold">Ma liste d&apos;envies</h2>
         <p className="mt-1 text-sm text-doux">Tout le groupe la voit. Vous ne saurez jamais ce qui a été réservé : surprise garantie.</p>
+        {anonyme && mesSouhaits.length === 0 && (
+          <p role="alert" className="mt-3 rounded-xl bg-cerise-clair p-3 text-sm font-medium text-cerise">
+            Obligatoire en mode mystère : sans liste, votre Père Noël n&apos;a aucune idée de qui vous êtes… ni de ce qui
+            vous ferait plaisir !
+          </p>
+        )}
         {mesSouhaits.length > 0 && (
           <ul className="mt-2 divide-y divide-trait">
             {mesSouhaits.map((s) => (
@@ -240,7 +275,7 @@ export default async function EspacePerso({
             {restants.map((p) => (
               <details key={p.id} className="py-2">
                 <summary className="cursor-pointer py-1 font-semibold">
-                  {p.prenom} <span className="font-normal text-doux">· {p.souhaits.length} idée{p.souhaits.length > 1 ? "s" : ""}</span>
+                  {nomVisible(p, anonyme)} <span className="font-normal text-doux">· {p.souhaits.length} idée{p.souhaits.length > 1 ? "s" : ""}</span>
                 </summary>
                 {p.souhaits.length ? (
                   <ul className="divide-y divide-trait">

@@ -24,3 +24,21 @@ export async function participantOu404(jeton: string) {
   if (!moi) notFound();
   return moi;
 }
+
+/**
+ * Les participants inscrits avant les noms de code n'en ont pas : on leur en
+ * attribue un à la première visite (organisateur ou participant).
+ */
+export async function assurerNomsDeCode(groupeId: string) {
+  const sans = await prisma.participant.findMany({ where: { groupeId, nomDeCode: "" }, select: { id: true } });
+  if (!sans.length) return;
+  const { nomsDeCodeAleatoires } = await import("./noms-de-code");
+  const pris = await prisma.participant.findMany({ where: { groupeId, NOT: { nomDeCode: "" } }, select: { nomDeCode: true } });
+  const noms = nomsDeCodeAleatoires(sans.length, pris.map((p) => p.nomDeCode));
+  await prisma.$transaction(sans.map((p, i) => prisma.participant.update({ where: { id: p.id }, data: { nomDeCode: noms[i] } })));
+}
+
+/** Le nom montré aux autres participants : le nom de code si le groupe est anonymisé. */
+export function nomVisible(p: { prenom: string; nomDeCode: string }, anonyme: boolean): string {
+  return anonyme && p.nomDeCode ? p.nomDeCode : p.prenom;
+}

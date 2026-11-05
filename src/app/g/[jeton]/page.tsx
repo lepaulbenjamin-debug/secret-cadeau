@@ -2,7 +2,7 @@ import { CalendarDays, Crown, Eye, EyeOff, Link2, Mail, MessageSquare, Shuffle, 
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import {
   ajouterParticipants,
@@ -20,6 +20,7 @@ import { Formulaire } from "@/components/formulaire";
 import { Partager } from "@/components/partager";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { compteARebours, dateLongue } from "@/lib/format";
+import { assurerNomsDeCode } from "@/lib/acces";
 import { nouveauJeton } from "@/lib/jeton";
 import { prisma } from "@/lib/prisma";
 
@@ -41,12 +42,16 @@ export default async function Organisation({
       // ⚠️ `destinataireId` n'est PAS lu : l'organisateur ne doit pas pouvoir découvrir le tirage.
       participants: {
         orderBy: { prenom: "asc" },
-        select: { id: true, prenom: true, jeton: true, email: true, telephone: true, ouvertLe: true, _count: { select: { souhaits: true } } },
+        select: { id: true, prenom: true, nomDeCode: true, jeton: true, email: true, telephone: true, ouvertLe: true, _count: { select: { souhaits: true } } },
       },
       exclusions: { include: { a: { select: { prenom: true } }, b: { select: { prenom: true } } } },
     },
   });
   if (!groupe) notFound();
+  if (groupe.participants.some((p) => !p.nomDeCode)) {
+    await assurerNomsDeCode(groupe.id);
+    redirect(`/g/${jeton}`);
+  }
 
   // Les groupes créés avant le lien d'invitation en reçoivent un à la première visite.
   const jetonInvitation =
@@ -60,6 +65,8 @@ export default async function Organisation({
     `🎁 ${prenom}, voici ton lien pour le tirage « ${groupe.nom} » sur Qui Offre. Il est personnel, ne le transfère pas !`;
 
   const tire = Boolean(groupe.tirageLe);
+  const anonyme = groupe.nomsDeCode;
+  const listesVides = groupe.participants.filter((p) => p._count.souhaits === 0).map((p) => p.prenom);
   const rebours = groupe.dateEchange ? compteARebours(groupe.dateEchange) : null;
   const ouverts = groupe.participants.filter((p) => p.ouvertLe).length;
   const dateIso = groupe.dateEchange?.toISOString().slice(0, 10) ?? "";
@@ -143,8 +150,24 @@ export default async function Organisation({
             <p className="mt-1 mb-4 text-sm text-doux">
               Vérifiez la liste et les exclusions. Personne, pas même vous, ne verra le résultat des autres.
             </p>
+            {anonyme && (
+              <p className="mb-4 rounded-xl bg-creme p-3 text-sm">
+                🕵️ <strong>Mode mystère</strong> : chacun offrira à un nom de code sans savoir qui c&apos;est. Les listes sont
+                donc obligatoires.
+                {listesVides.length > 0 ? (
+                  <span className="mt-1 block font-medium text-cerise">Liste vide : {listesVides.join(", ")}.</span>
+                ) : (
+                  <span className="mt-1 block font-medium text-sapin">Toutes les listes sont remplies ✓</span>
+                )}
+              </p>
+            )}
             <Formulaire action={lancerTirage.bind(null, jeton)} bouton="Lancer le tirage au sort" boutonClass="bouton bouton-cerise w-full">
-              {null}
+              {anonyme && listesVides.length > 0 ? (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="forcer" className="size-4 accent-[var(--cerise)]" />
+                  Lancer quand même, malgré les listes vides
+                </label>
+              ) : null}
             </Formulaire>
           </>
         )}
@@ -160,7 +183,10 @@ export default async function Organisation({
           {groupe.participants.map((p) => (
             <li key={p.id} className="flex items-center gap-3 py-3">
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">{p.prenom}</p>
+                <p className="truncate font-semibold">
+                  {p.prenom}
+                  {anonyme && <span className="ml-1.5 text-sm font-normal text-doux">alias {p.nomDeCode}</span>}
+                </p>
                 <p className="flex items-center gap-1 text-xs text-doux">
                   {p.ouvertLe ? <><Eye size={13} /> a ouvert son lien</> : <><EyeOff size={13} /> pas encore ouvert</>}
                   {" · "}{p._count.souhaits} idée{p._count.souhaits > 1 ? "s" : ""}
@@ -265,6 +291,13 @@ export default async function Organisation({
                 <input id="budget" name="budget" inputMode="numeric" className="champ" defaultValue={groupe.budget ?? ""} />
               </div>
             </div>
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" name="nomsDeCode" defaultChecked={groupe.nomsDeCode} className="mt-0.5 size-4 accent-[var(--sapin)]" />
+              <span>
+                <strong>Mode mystère</strong> : les participants ne voient que des noms de code marrants, même pour la
+                personne qu&apos;ils ont tirée. Listes obligatoires.
+              </span>
+            </label>
             <div>
               <label className="etiquette" htmlFor="message">Mot pour le groupe</label>
               <textarea id="message" name="message" rows={2} className="champ" defaultValue={groupe.message} maxLength={500} />

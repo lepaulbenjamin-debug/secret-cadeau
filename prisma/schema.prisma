@@ -75,6 +75,8 @@ model Souhait {
   participant   Participant  @relation("Proprietaire", fields: [participantId], references: [id], onDelete: Cascade)
   titre         String
   lien          String       @default("")
+  /// Image du produit (https), trouvée en collant le lien ou laissée vide.
+  image         String       @default("")
   /// En euros, facultatif.
   prix          Int?
   note          String       @default("")

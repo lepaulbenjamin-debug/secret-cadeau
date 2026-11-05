@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { groupeParJetonAdmin, participantParJeton } from "@/lib/acces";
 import { deplierLienCourt } from "@/lib/affiliation";
+import { apercuDuLien, type Apercu } from "@/lib/apercu";
 import { lienSur, lirePrenoms } from "@/lib/format";
 import { nouveauJeton } from "@/lib/jeton";
 import { prisma } from "@/lib/prisma";
@@ -148,8 +149,15 @@ export async function annulerTirage(jetonAdmin: string) {
 
 /* ─────────────────────────────── Liste de souhaits ─────────────────────────────── */
 
+/** Une image d'idée : seulement en https, sinon rien (elle est affichée chez les autres). */
+function imageSure(brut: string): string {
+  const lien = lienSur(brut);
+  return lien.startsWith("https://") ? lien : "";
+}
+
 async function lireSouhait(f: FormData) {
   return {
+    image: imageSure(texte(f, "image", 1000)),
     titre: texte(f, "titre", 120),
     // Un lien court Amazon (amzn.eu/…) est déplié : sinon il ne peut pas porter notre identifiant.
     lien: await deplierLienCourt(lienSur(texte(f, "lien", 1000))),
@@ -198,6 +206,18 @@ export async function basculerReservation(jeton: string, souhaitId: string) {
     if (!count) throw new Error("Quelqu'un vient de la réserver.");
   }
   revalidatePath(`/p/${jeton}`);
+}
+
+/**
+ * Ce qu'on peut deviner d'un lien collé (titre, image, prix), pour remplir le
+ * formulaire. Réservé aux participants : sans jeton, ce serait un service
+ * public de récupération de pages au nom de notre serveur.
+ */
+export async function apercuLien(jeton: string, brut: string): Promise<Apercu | null> {
+  await participantParJeton(jeton);
+  const lien = await deplierLienCourt(lienSur(brut.slice(0, 1000)));
+  if (!lien) return null;
+  return apercuDuLien(lien);
 }
 
 /* ───────────────────────────── Questions anonymes ───────────────────────────── */

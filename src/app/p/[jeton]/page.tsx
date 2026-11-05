@@ -22,7 +22,7 @@ import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Mon espace", robots: { index: false, follow: false } };
 
-const champsSouhait = { id: true, titre: true, lien: true, prix: true, note: true, reserveParId: true } as const;
+const champsSouhait = { id: true, titre: true, lien: true, image: true, prix: true, note: true, reserveParId: true } as const;
 
 export default async function EspacePerso({ params }: { params: Promise<{ jeton: string }> }) {
   const { jeton } = await params;
@@ -36,7 +36,7 @@ export default async function EspacePerso({ params }: { params: Promise<{ jeton:
     prisma.souhait.findMany({
       where: { participantId: moi.id },
       orderBy: { creeLe: "asc" },
-      select: { id: true, titre: true, lien: true, prix: true, note: true },
+      select: { id: true, titre: true, lien: true, image: true, prix: true, note: true },
     }),
     // ⚠️ Ni `jeton` ni `destinataireId` des autres : ce sont leurs secrets.
     prisma.participant.findMany({
@@ -168,7 +168,7 @@ export default async function EspacePerso({ params }: { params: Promise<{ jeton:
                       <summary className="inline-flex cursor-pointer items-center gap-1 text-sm font-medium text-sapin"><Pencil size={13} /> Modifier</summary>
                       <div className="mt-3">
                         <Formulaire key={`modif-${s.id}`} action={modifierSouhait.bind(null, jeton, s.id)} bouton="Enregistrer">
-                          <ChampsSouhait v={s} id={s.id} />
+                          <ChampsSouhait v={s} id={s.id} jeton={jeton} />
                         </Formulaire>
                       </div>
                     </details>
@@ -188,7 +188,7 @@ export default async function EspacePerso({ params }: { params: Promise<{ jeton:
         <div className="mt-4 rounded-2xl bg-creme p-4">
           <h3 className="mb-3 font-semibold text-sapin">+ Ajouter une idée</h3>
           <Formulaire key="ajout" action={ajouterSouhait.bind(null, jeton)} bouton="Ajouter à ma liste" vider>
-            <ChampsSouhait id="nouveau" />
+            <ChampsSouhait id="nouveau" jeton={jeton} />
           </Formulaire>
         </div>
       </section>

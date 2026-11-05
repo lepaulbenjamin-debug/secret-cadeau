@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { groupeParJetonAdmin, participantParJeton } from "@/lib/acces";
+import { deplierLienCourt } from "@/lib/affiliation";
 import { lienSur, lirePrenoms } from "@/lib/format";
 import { nouveauJeton } from "@/lib/jeton";
 import { prisma } from "@/lib/prisma";
@@ -147,10 +148,11 @@ export async function annulerTirage(jetonAdmin: string) {
 
 /* ─────────────────────────────── Liste de souhaits ─────────────────────────────── */
 
-function lireSouhait(f: FormData) {
+async function lireSouhait(f: FormData) {
   return {
     titre: texte(f, "titre", 120),
-    lien: lienSur(texte(f, "lien", 1000)),
+    // Un lien court Amazon (amzn.eu/…) est déplié : sinon il ne peut pas porter notre identifiant.
+    lien: await deplierLienCourt(lienSur(texte(f, "lien", 1000))),
     prix: entierPositif(texte(f, "prix", 10)),
     note: texte(f, "note", 300),
   };
@@ -158,7 +160,7 @@ function lireSouhait(f: FormData) {
 
 export async function ajouterSouhait(jeton: string, _: Etat, f: FormData): Promise<Etat> {
   const moi = await participantParJeton(jeton);
-  const s = lireSouhait(f);
+  const s = await lireSouhait(f);
   if (!s.titre) return { erreur: "Quel cadeau ?" };
   if ((await prisma.souhait.count({ where: { participantId: moi.id } })) >= 50) return { erreur: "50 idées au maximum." };
   await prisma.souhait.create({ data: { ...s, participantId: moi.id } });
@@ -168,7 +170,7 @@ export async function ajouterSouhait(jeton: string, _: Etat, f: FormData): Promi
 
 export async function modifierSouhait(jeton: string, souhaitId: string, _: Etat, f: FormData): Promise<Etat> {
   const moi = await participantParJeton(jeton);
-  const s = lireSouhait(f);
+  const s = await lireSouhait(f);
   if (!s.titre) return { erreur: "Quel cadeau ?" };
   const { count } = await prisma.souhait.updateMany({ where: { id: souhaitId, participantId: moi.id }, data: s });
   if (!count) return { erreur: "Idée introuvable." };

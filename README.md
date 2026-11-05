@@ -12,6 +12,7 @@
 - **Listes d'envies** (titre, lien, prix, précision), visibles par tout le groupe.
 - **Réservations sans doublon** : « Je m'en occupe ». Le propriétaire de la liste ne le voit **jamais**.
 - **Questions anonymes** à la personne qu'on a tirée.
+- **Liens affiliés Amazon** : les liens Amazon des listes portent notre identifiant Partenaires (`src/lib/affiliation.ts`, variable `AMAZON_TAG_FR`).
 - **Suivi pour l'organisateur** : qui a ouvert son lien, combien d'idées — sans jamais voir le tirage.
 - **Sur cet appareil** : les liens ouverts sont retrouvés depuis l'accueil.
 

@@ -1,14 +1,16 @@
 /**
  * L'éditeur du site, pour les mentions légales et la politique de
- * confidentialité. ⚠️ À COMPLÉTER avant de faire connaître le site :
- * la loi (LCEN, art. 6) impose d'identifier l'éditeur et le directeur de la
- * publication.
+ * confidentialité (LCEN, art. 6 : identité, adresse, téléphone,
+ * immatriculation, directeur de la publication). Même éditeur que
+ * créawebconseil.fr et Petsitia.
  */
 export const EDITEUR = {
-  nom: "[À compléter : nom de la société ou de l'éditeur]",
-  forme: "[À compléter : forme juridique et capital, ou « entrepreneur individuel »]",
-  adresse: "[À compléter : adresse du siège]",
-  siren: "[À compléter : SIREN / RCS]",
-  directeurPublication: "[À compléter : prénom et nom]",
-  contact: "[À compléter : adresse e-mail de contact]",
+  nom: "Benjamin Lepaul — CréaWeb Conseil",
+  forme: "entrepreneur individuel",
+  adresse: "17 rue Jules Ferry, 25600 Nommay",
+  siren: "SIREN 804 460 921 — SIRET 804 460 921 00039",
+  tva: "TVA non applicable, article 293 B du CGI",
+  telephone: "+33 7 69 07 90 53",
+  directeurPublication: "Benjamin Lepaul",
+  contact: "contact@creawebconseil.fr",
 };

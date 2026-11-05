@@ -24,7 +24,11 @@ export default function MentionsLegales() {
         <br />
         {EDITEUR.siren}
         <br />
-        Contact : {EDITEUR.contact}
+        {EDITEUR.tva}
+        <br />
+        Téléphone : {EDITEUR.telephone}
+        <br />
+        Contact : <a href={`mailto:${EDITEUR.contact}`}>{EDITEUR.contact}</a>
       </p>
       <p>Directeur de la publication : {EDITEUR.directeurPublication}</p>
 

@@ -66,11 +66,43 @@ Sans variable, rien ne change.
 ⚠️ Revenus d'affiliation = usage commercial : l'offre gratuite de Vercel (Hobby) ne
 l'autorise pas, il faut passer à l'offre Pro.
 
-## 5. Sur téléphone, sans store
+## 5. Les rappels par e-mail (Resend)
+
+Les participants qui ont donné leur e-mail reçoivent leur lien au moment du tirage,
+puis un rappel une semaine avant et la veille de l'échange. Sans ces réglages,
+l'application marche, simplement sans e-mail.
+
+1. Créez un compte sur <https://resend.com> (gratuit jusqu'à 3 000 e-mails/mois).
+2. **Domains → Add Domain** → `quioffre.fr`, région **Ireland (eu-west-1)**.
+   Resend affiche 3 ou 4 enregistrements DNS (MX et TXT pour `send`, TXT `resend._domainkey`).
+   Ajoutez-les chez OVH (**Zone DNS → Ajouter une entrée**), puis **Verify** dans Resend.
+   ⚠️ Ne touchez pas aux MX existants d'OVH sur `@` : ceux de Resend sont sur le sous-domaine `send`.
+3. **API Keys → Create API Key** (permission *Sending access*), copiez la clé.
+4. Dans Vercel → **Settings → Environment Variables** (Production) :
+   - `RESEND_API_KEY` = la clé ;
+   - `EMAIL_EXPEDITEUR` = `Qui Offre <rappels@quioffre.fr>` ;
+   - `CRON_SECRET` = une longue chaîne aléatoire (Vercel l'utilise pour appeler la tâche planifiée ;
+     sans elle, la tâche refuse de tourner).
+5. **Redeploy**. La tâche part chaque matin vers 9 h (`vercel.json`) ; son bilan est dans
+   Vercel → **Logs** (« Rappels : … »).
+
+## 6. Le référencement
+
+1. **Google Search Console** (<https://search.google.com/search-console>) : ajoutez la propriété
+   *Domaine* `quioffre.fr` (un enregistrement TXT chez OVH), puis **Sitemaps** →
+   `https://www.quioffre.fr/sitemap.xml`.
+2. **Bing Webmaster Tools** (<https://www.bing.com/webmasters>) : importez depuis Search Console en
+   un clic. Bing alimente aussi Copilot et la recherche de ChatGPT.
+3. Rien d'autre à faire pour les assistants d'IA : `robots.txt` les autorise et `/llms.txt`
+   leur résume le site.
+4. Avant d'en parler autour de vous, complétez l'identité de l'éditeur dans `src/lib/editeur.ts`
+   (mentions légales et confidentialité).
+
+## 7. Sur téléphone, sans store
 
 Ouvrez le site dans Safari ou Chrome → **Partager → Sur l'écran d'accueil**.
 
-## 6. Plus tard : les stores (Capacitor)
+## 8. Plus tard : les stores (Capacitor)
 
 Sur le Mac :
 

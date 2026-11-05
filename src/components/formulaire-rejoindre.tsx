@@ -60,7 +60,7 @@ export function FormulaireRejoindre({ jetonInvitation }: { jetonInvitation: stri
         <label className="etiquette" htmlFor="telephone">Téléphone <span className="font-normal text-doux">(facultatif)</span></label>
         <input id="telephone" name="telephone" type="tel" className="champ" maxLength={30} autoComplete="tel" placeholder="06 12 34 56 78" />
         <p className="mt-1 text-sm text-doux">
-          Visibles uniquement par l&apos;organisateur, pour vous renvoyer votre lien si vous le perdez.
+          Visibles uniquement par l&apos;organisateur. Avec un e-mail, vous recevrez votre lien au tirage et un rappel avant l&apos;échange.
         </p>
       </div>
       <button type="submit" className="bouton bouton-cerise w-full" disabled={enCours}>

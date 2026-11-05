@@ -4,10 +4,15 @@ export function dateLongue(d: Date): string {
   return new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Paris" }).format(d);
 }
 
+/** Nombre de jours calendaires (heure de Paris) entre aujourd'hui et `d` : 0 = aujourd'hui, négatif = passé. */
+export function joursAvant(d: Date, maintenant = new Date()): number {
+  const jour = (x: Date) => Math.floor(new Date(x.toLocaleDateString("en-CA", { timeZone: "Europe/Paris" })).getTime() / JOUR_MS);
+  return jour(d) - jour(maintenant);
+}
+
 /** « dans 12 jours », « demain », « c'est aujourd'hui ! », ou rien une fois passé. */
 export function compteARebours(d: Date, maintenant = new Date()): string | null {
-  const jour = (x: Date) => Math.floor(new Date(x.toLocaleDateString("en-CA", { timeZone: "Europe/Paris" })).getTime() / JOUR_MS);
-  const n = jour(d) - jour(maintenant);
+  const n = joursAvant(d, maintenant);
   if (n < 0) return null;
   if (n === 0) return "c'est aujourd'hui !";
   if (n === 1) return "c'est demain";

@@ -15,6 +15,7 @@ import {
 import { BoutonAction } from "@/components/bouton-action";
 import { ChampsSouhait } from "@/components/champs-souhait";
 import { CopierLien } from "@/components/copier-lien";
+import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Formulaire } from "@/components/formulaire";
 import { Revelation } from "@/components/revelation";
 import { SeSouvenir } from "@/components/se-souvenir";
@@ -249,9 +250,13 @@ export default async function EspacePerso({
       </section>
 
       {/* Mes coordonnées */}
-      <details className="carte">
-        <summary className="cursor-pointer font-titre text-xl font-semibold">Mes coordonnées</summary>
-        <p className="mt-2 text-sm text-doux">Visibles uniquement par l&apos;organisateur, pour vous renvoyer votre lien si vous le perdez.</p>
+      <details id="rappels" className="carte">
+        <summary className="cursor-pointer font-titre text-xl font-semibold">Mes coordonnées et rappels</summary>
+        <OuvrirSiAncre id="rappels" />
+        <p className="mt-2 text-sm text-doux">
+          Visibles uniquement par l&apos;organisateur. Avec un e-mail, vous recevez votre lien au moment du tirage et un
+          rappel une semaine puis la veille de l&apos;échange.
+        </p>
         <div className="mt-3">
           <Formulaire key="coordonnees" action={modifierCoordonnees.bind(null, jeton)} bouton="Enregistrer">
             <div>
@@ -262,6 +267,10 @@ export default async function EspacePerso({
               <label className="etiquette" htmlFor="telephone">Téléphone</label>
               <input id="telephone" name="telephone" type="tel" className="champ" defaultValue={moi.telephone} maxLength={30} autoComplete="tel" />
             </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="rappelsEmail" defaultChecked={moi.rappelsEmail} className="size-4 accent-[var(--sapin)]" />
+              Recevoir les rappels par e-mail
+            </label>
           </Formulaire>
         </div>
       </details>

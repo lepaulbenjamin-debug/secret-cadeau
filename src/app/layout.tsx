@@ -9,13 +9,7 @@ import "@fontsource-variable/fraunces";
 import "@fontsource-variable/inter";
 import "./globals.css";
 import { affiliationActive, MENTION_AMAZON } from "@/lib/affiliation";
-
-/*
- * L'adresse publique, écrite en dur : lue dans l'environnement, elle suivrait
- * les déploiements d'aperçu, et les aperçus de liens (WhatsApp, SMS) pointeraient
- * vers une adresse Vercel temporaire.
- */
-const SITE_URL = "https://www.quioffre.fr";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -47,11 +41,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr">
       <body className="font-sans antialiased">
-        <div className="mx-auto w-full max-w-xl px-4 pb-16">
-          {children}
-          {/* Mention exigée par le programme Partenaires Amazon, visible sur toutes les pages. */}
-          {affiliationActive() && <p className="mt-10 text-center text-xs text-doux">{MENTION_AMAZON}</p>}
-        </div>
+        {children}
+        {/* Mention exigée par le programme Partenaires Amazon, visible sur toutes les pages. */}
+        {affiliationActive() && <p className="mx-auto max-w-xl px-4 pb-10 text-center text-xs text-doux">{MENTION_AMAZON}</p>}
       </body>
     </html>
   );

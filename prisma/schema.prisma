@@ -46,6 +46,8 @@ model Participant {
   /// Visibles de l'organisateur seul : pour envoyer les liens et, plus tard, des rappels.
   email     String    @default("")
   telephone String    @default("")
+  /// Rappels par e-mail (tirage fait, J-7, veille). Coupés en un clic depuis l'e-mail.
+  rappelsEmail Boolean @default(true)
   /// La personne à qui il offre. Fixée par le tirage, connue de lui seul.
   destinataireId String?      @unique
   destinataire   Participant? @relation("Tirage", fields: [destinataireId], references: [id], onDelete: SetNull)
@@ -58,6 +60,7 @@ model Participant {
   reservations    Souhait[]  @relation("Reservation")
   questionsPosees Question[] @relation("Pere")
   questionsRecues Question[] @relation("Destinataire")
+  rappels         Rappel[]
   exclusionsA     Exclusion[] @relation("ExclusionA")
   exclusionsB     Exclusion[] @relation("ExclusionB")
 
@@ -111,4 +114,16 @@ model Question {
 
   @@index([destinataireId])
   @@index([pereId])
+}
+
+/// Un e-mail de rappel déjà envoyé : la tâche quotidienne peut repasser sans doublon.
+model Rappel {
+  id            String      @id @default(cuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  /// « tirage », « j7 », « veille »
+  type          String
+  envoyeLe      DateTime    @default(now())
+
+  @@unique([participantId, type])
 }

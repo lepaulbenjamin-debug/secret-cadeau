@@ -120,3 +120,26 @@ body {
 @keyframes flocon {
   to { transform: translateY(110dvh) rotate(360deg); }
 }
+
+/*
+ * Typographie des guides. Écrite à la main plutôt que par un plugin : quelques
+ * règles suffisent, et elles suivent les couleurs du thème clair et sombre.
+ */
+.prose-qo { line-height: 1.7; font-size: 1.0625rem; }
+.prose-qo h1 { font-family: var(--font-titre); font-weight: 700; font-size: 2.1rem; line-height: 1.15; margin: 0 0 1rem; }
+.prose-qo h2 { font-family: var(--font-titre); font-weight: 650; font-size: 1.55rem; line-height: 1.25; margin: 2.5rem 0 0.75rem; }
+.prose-qo h3 { font-weight: 650; font-size: 1.15rem; margin: 1.75rem 0 0.5rem; }
+.prose-qo p { margin: 0 0 1rem; }
+.prose-qo ul, .prose-qo ol { margin: 0 0 1rem; padding-left: 1.4rem; }
+.prose-qo ul { list-style: disc; }
+.prose-qo ol { list-style: decimal; }
+.prose-qo li { margin: 0.3rem 0; }
+.prose-qo a { color: var(--sapin); text-decoration: underline; text-underline-offset: 2px; }
+.prose-qo strong { font-weight: 650; }
+.prose-qo table { width: 100%; border-collapse: collapse; margin: 0 0 1.25rem; font-size: 0.95rem; display: block; overflow-x: auto; }
+.prose-qo th, .prose-qo td { border: 1px solid var(--trait); padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+.prose-qo th { background: var(--sapin-clair); font-weight: 650; }
+.prose-qo .resume { font-size: 1.15rem; border-left: 4px solid var(--cerise); padding: 0.25rem 0 0.25rem 1rem; margin: 0 0 0.75rem; }
+.prose-qo .resume p { margin: 0; }
+.prose-qo .not-prose a { text-decoration: none; }
+@media (min-width: 640px) { .prose-qo h1 { font-size: 2.6rem; } }

@@ -4,15 +4,24 @@ import { Check, Copy, Share2 } from "lucide-react";
 import { useState } from "react";
 
 /**
- * Envoie un lien personnel : la feuille de partage du téléphone quand elle
- * existe (SMS, WhatsApp, mail…), sinon le presse-papiers.
+ * Envoie un lien : la feuille de partage du téléphone quand elle existe (SMS,
+ * WhatsApp, mail…), sinon le presse-papiers.
  */
-export function Partager({ chemin, prenom, groupe, compact = false }: { chemin: string; prenom: string; groupe: string; compact?: boolean }) {
+export function Partager({
+  chemin,
+  texte,
+  compact = false,
+  libelle = "Envoyer",
+}: {
+  chemin: string;
+  texte: string;
+  compact?: boolean;
+  libelle?: string;
+}) {
   const [copie, setCopie] = useState(false);
 
   const partager = async () => {
     const url = new URL(chemin, window.location.origin).toString();
-    const texte = `🎁 ${prenom}, voici ton lien pour le tirage « ${groupe} » sur Qui Offre. Il est personnel, ne le transfère pas !`;
     if (navigator.share) {
       try {
         await navigator.share({ title: "Qui Offre", text: texte, url });
@@ -34,7 +43,7 @@ export function Partager({ chemin, prenom, groupe, compact = false }: { chemin: 
   return (
     <button type="button" onClick={partager} className={compact ? "bouton bouton-discret !min-h-9 !px-3 text-sm" : "bouton"}>
       <Icone size={16} />
-      {copie ? "Copié !" : "Envoyer"}
+      {copie ? "Copié !" : libelle}
     </button>
   );
 }

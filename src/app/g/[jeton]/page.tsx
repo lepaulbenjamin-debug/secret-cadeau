@@ -1,5 +1,6 @@
-import { CalendarDays, Crown, Eye, EyeOff, Shuffle, Trash2, Wallet, X } from "lucide-react";
+import { CalendarDays, Crown, Eye, EyeOff, Link2, Mail, MessageSquare, Shuffle, Trash2, Wallet, X } from "lucide-react";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -9,6 +10,7 @@ import {
   basculerExclusion,
   lancerTirage,
   modifierGroupe,
+  regenererInvitation,
   retirerParticipant,
 } from "@/app/actions";
 import { AjoutExclusion } from "@/components/ajout-exclusion";
@@ -18,6 +20,7 @@ import { Formulaire } from "@/components/formulaire";
 import { Partager } from "@/components/partager";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { compteARebours, dateLongue } from "@/lib/format";
+import { nouveauJeton } from "@/lib/jeton";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Organisation", robots: { index: false, follow: false } };
@@ -38,12 +41,23 @@ export default async function Organisation({
       // ⚠️ `destinataireId` n'est PAS lu : l'organisateur ne doit pas pouvoir découvrir le tirage.
       participants: {
         orderBy: { prenom: "asc" },
-        select: { id: true, prenom: true, jeton: true, ouvertLe: true, _count: { select: { souhaits: true } } },
+        select: { id: true, prenom: true, jeton: true, email: true, telephone: true, ouvertLe: true, _count: { select: { souhaits: true } } },
       },
       exclusions: { include: { a: { select: { prenom: true } }, b: { select: { prenom: true } } } },
     },
   });
   if (!groupe) notFound();
+
+  // Les groupes créés avant le lien d'invitation en reçoivent un à la première visite.
+  const jetonInvitation =
+    groupe.jetonInvitation ??
+    (await prisma.groupe.update({ where: { id: groupe.id }, data: { jetonInvitation: nouveauJeton() } })).jetonInvitation!;
+
+  // L'adresse complète, pour les SMS et e-mails préremplis (qui n'acceptent pas de lien relatif).
+  const h = await headers();
+  const origine = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
+  const messagePerso = (prenom: string) =>
+    `🎁 ${prenom}, voici ton lien pour le tirage « ${groupe.nom} » sur Qui Offre. Il est personnel, ne le transfère pas !`;
 
   const tire = Boolean(groupe.tirageLe);
   const rebours = groupe.dateEchange ? compteARebours(groupe.dateEchange) : null;
@@ -75,6 +89,34 @@ export default async function Organisation({
           </p>
           <div className="mt-3"><CopierLien chemin={`/g/${jeton}`} libelle="Copier mon lien d'organisateur" /></div>
         </div>
+      )}
+
+      {/* Le lien d'invitation */}
+      {!tire && (
+        <section className="carte">
+          <h2 className="flex items-center gap-2 font-titre text-xl font-semibold"><Link2 size={20} /> Lien d&apos;invitation</h2>
+          <p className="mt-1 text-sm text-doux">
+            Un seul lien pour tout le groupe : chacun s&apos;inscrit avec son prénom et ses coordonnées. Envoyez-le dans la
+            conversation de famille.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Partager
+              chemin={`/rejoindre/${jetonInvitation}`}
+              texte={`🎁 Tirage au sort « ${groupe.nom} » : inscris-toi ici pour participer !`}
+              libelle="Partager l'invitation"
+            />
+            <CopierLien chemin={`/rejoindre/${jetonInvitation}`} />
+          </div>
+          <div className="mt-3">
+            <BoutonAction
+              action={regenererInvitation.bind(null, jeton)}
+              confirmation="Créer un nouveau lien d'invitation ? L'ancien ne marchera plus (les inscrits restent inscrits)."
+              className="text-sm text-doux underline"
+            >
+              Le lien a trop circulé ? En créer un nouveau
+            </BoutonAction>
+          </div>
+        </section>
       )}
 
       {/* Le tirage */}
@@ -111,7 +153,9 @@ export default async function Organisation({
       {/* Les participants */}
       <section className="carte">
         <h2 className="font-titre text-xl font-semibold">Participants · {groupe.participants.length}</h2>
-        <p className="mt-1 text-sm text-doux">Chacun a son lien personnel. Envoyez-le par SMS, WhatsApp ou e-mail.</p>
+        <p className="mt-1 text-sm text-doux">
+          Chacun a son lien personnel. Ceux qui se sont inscrits avec le lien d&apos;invitation l&apos;ont déjà ; envoyez-le aux autres.
+        </p>
         <ul className="mt-4 divide-y divide-trait">
           {groupe.participants.map((p) => (
             <li key={p.id} className="flex items-center gap-3 py-3">
@@ -121,8 +165,28 @@ export default async function Organisation({
                   {p.ouvertLe ? <><Eye size={13} /> a ouvert son lien</> : <><EyeOff size={13} /> pas encore ouvert</>}
                   {" · "}{p._count.souhaits} idée{p._count.souhaits > 1 ? "s" : ""}
                 </p>
+                {(p.telephone || p.email) && (
+                  <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
+                    {p.telephone && (
+                      <a
+                        className="inline-flex items-center gap-1 text-sapin underline"
+                        href={`sms:${p.telephone}?&body=${encodeURIComponent(`${messagePerso(p.prenom)}\n${origine}/p/${p.jeton}`)}`}
+                      >
+                        <MessageSquare size={12} /> {p.telephone}
+                      </a>
+                    )}
+                    {p.email && (
+                      <a
+                        className="inline-flex items-center gap-1 text-sapin underline"
+                        href={`mailto:${p.email}?subject=${encodeURIComponent(`Ton lien pour « ${groupe.nom} »`)}&body=${encodeURIComponent(`${messagePerso(p.prenom)}\n\n${origine}/p/${p.jeton}`)}`}
+                      >
+                        <Mail size={12} /> {p.email}
+                      </a>
+                    )}
+                  </p>
+                )}
               </div>
-              <Partager chemin={`/p/${p.jeton}`} prenom={p.prenom} groupe={groupe.nom} compact />
+              <Partager chemin={`/p/${p.jeton}`} texte={messagePerso(p.prenom)} compact />
               {!tire && (
                 <BoutonAction
                   action={retirerParticipant.bind(null, jeton, p.id)}

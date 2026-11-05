@@ -13,6 +13,7 @@
 - **Listes d'envies** (titre, lien, image, prix, précision), visibles par tout le groupe. **Coller un lien remplit l'idée** (titre, image, prix) quand le site les publie ; pour Amazon, titre tiré de l'adresse (`src/lib/apercu.ts`).
 - **Réservations sans doublon** : « Je m'en occupe ». Le propriétaire de la liste ne le voit **jamais**.
 - **Questions anonymes** à la personne qu'on a tirée.
+- **Mode mystère** : chacun reçoit un nom de code marrant (« Pingouin Farceur 🐧 », `src/lib/noms-de-code.ts`). On offre à un nom de code sans savoir qui c'est, d'après sa seule liste, et on l'écrit sur le paquet. Listes obligatoires avant le tirage (sauf si l'organisateur force).
 - **Liens affiliés Amazon** : les liens Amazon des listes portent notre identifiant Partenaires (`src/lib/affiliation.ts`, variable `AMAZON_TAG_FR`).
 - **Suivi pour l'organisateur** : qui a ouvert son lien, combien d'idées — sans jamais voir le tirage.
 - **Sur cet appareil** : les liens ouverts sont retrouvés depuis l'accueil.

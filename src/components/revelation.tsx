@@ -7,7 +7,7 @@ import { useState } from "react";
  * Le nom tiré, caché derrière un paquet à ouvrir — à chaque visite.
  * On consulte souvent sa liste à table, téléphone visible de tous.
  */
-export function Revelation({ prenom }: { prenom: string }) {
+export function Revelation({ prenom, mystere = false }: { prenom: string; mystere?: boolean }) {
   const [ouvert, setOuvert] = useState(false);
 
   if (!ouvert) {
@@ -28,6 +28,12 @@ export function Revelation({ prenom }: { prenom: string }) {
     <div className="apparition rounded-2xl bg-sapin p-6 text-center text-carte">
       <p className="text-sm uppercase tracking-widest opacity-80">Vous offrez à</p>
       <p className="mt-1 font-titre text-4xl font-bold">{prenom}</p>
+      {mystere && (
+        <p className="mx-auto mt-3 max-w-sm text-sm opacity-90">
+          Qui se cache derrière ce nom de code ? Mystère ! Choisissez d&apos;après sa liste, et écrivez ce nom sur le
+          paquet : le jour J, chacun récupère celui qui porte le sien.
+        </p>
+      )}
       <button type="button" className="mt-3 text-sm underline opacity-80" onClick={() => setOuvert(false)}>
         Cacher
       </button>

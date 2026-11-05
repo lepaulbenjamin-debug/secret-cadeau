@@ -7,6 +7,7 @@ import { deplierLienCourt } from "@/lib/affiliation";
 import { apercuDuLien, type Apercu } from "@/lib/apercu";
 import { lienSur, lirePrenoms } from "@/lib/format";
 import { nouveauJeton } from "@/lib/jeton";
+import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
 import { prisma } from "@/lib/prisma";
 import { tirer } from "@/lib/tirage";
 
@@ -47,15 +48,17 @@ export async function creerGroupe(_: unknown, f: FormData): Promise<GroupeCree> 
     : autres;
   if (prenoms.length > MAX_PARTICIPANTS) return { erreur: `${MAX_PARTICIPANTS} participants au maximum.` };
 
+  const noms = nomsDeCodeAleatoires(prenoms.length);
   const groupe = await prisma.groupe.create({
     data: {
       nom,
       dateEchange: dateOuNull(texte(f, "date", 10)),
       budget: entierPositif(texte(f, "budget", 10)),
       message: texte(f, "message", 500),
+      nomsDeCode: f.get("nomsDeCode") === "on",
       jetonAdmin: nouveauJeton(),
       jetonInvitation: nouveauJeton(),
-      participants: { create: prenoms.map((prenom) => ({ prenom, jeton: nouveauJeton() })) },
+      participants: { create: prenoms.map((prenom, i) => ({ prenom, nomDeCode: noms[i], jeton: nouveauJeton() })) },
     },
     include: { participants: { orderBy: { creeLe: "asc" } } },
   });
@@ -75,6 +78,7 @@ export async function modifierGroupe(jetonAdmin: string, _: Etat, f: FormData): 
       dateEchange: dateOuNull(texte(f, "date", 10)),
       budget: entierPositif(texte(f, "budget", 10)),
       message: texte(f, "message", 500),
+      nomsDeCode: f.get("nomsDeCode") === "on",
     },
   });
   revalidatePath("/", "layout");
@@ -84,13 +88,14 @@ export async function modifierGroupe(jetonAdmin: string, _: Etat, f: FormData): 
 export async function ajouterParticipants(jetonAdmin: string, _: Etat, f: FormData): Promise<Etat> {
   const groupe = await groupeParJetonAdmin(jetonAdmin);
   if (groupe.tirageLe) return { erreur: "Le tirage est fait : annulez-le pour ajouter quelqu'un." };
-  const existants = await prisma.participant.findMany({ where: { groupeId: groupe.id }, select: { prenom: true } });
+  const existants = await prisma.participant.findMany({ where: { groupeId: groupe.id }, select: { prenom: true, nomDeCode: true } });
   const deja = new Set(existants.map((p) => p.prenom.toLowerCase()));
   const nouveaux = lirePrenoms(String(f.get("prenoms") ?? "")).filter((p) => !deja.has(p.toLowerCase()));
   if (!nouveaux.length) return { erreur: "Aucun nouveau prénom." };
   if (existants.length + nouveaux.length > MAX_PARTICIPANTS) return { erreur: `${MAX_PARTICIPANTS} participants au maximum.` };
+  const noms = nomsDeCodeAleatoires(nouveaux.length, existants.map((p) => p.nomDeCode));
   await prisma.participant.createMany({
-    data: nouveaux.map((prenom) => ({ prenom, jeton: nouveauJeton(), groupeId: groupe.id })),
+    data: nouveaux.map((prenom, i) => ({ prenom, nomDeCode: noms[i], jeton: nouveauJeton(), groupeId: groupe.id })),
   });
   revalidatePath(`/g/${jetonAdmin}`);
   return { ok: nouveaux.length > 1 ? `${nouveaux.length} personnes ajoutées.` : `${nouveaux[0]} est ajouté·e.` };
@@ -116,14 +121,26 @@ export async function basculerExclusion(jetonAdmin: string, x: string, y: string
   revalidatePath(`/g/${jetonAdmin}`);
 }
 
-export async function lancerTirage(jetonAdmin: string): Promise<Etat> {
+export async function lancerTirage(jetonAdmin: string, _etat: Etat, f: FormData): Promise<Etat> {
   const groupe = await groupeParJetonAdmin(jetonAdmin);
   if (groupe.tirageLe) return { erreur: "Le tirage est déjà fait." };
   const [participants, exclusions] = await Promise.all([
-    prisma.participant.findMany({ where: { groupeId: groupe.id }, select: { id: true } }),
+    prisma.participant.findMany({
+      where: { groupeId: groupe.id },
+      select: { id: true, prenom: true, _count: { select: { souhaits: true } } },
+    }),
     prisma.exclusion.findMany({ where: { groupeId: groupe.id }, select: { aId: true, bId: true } }),
   ]);
   if (participants.length < 3) return { erreur: "Il faut au moins trois participants." };
+
+  // Mode mystère : on offre à un nom de code, sans savoir qui c'est. Sans liste,
+  // le Père Noël n'a strictement rien pour choisir.
+  const vides = participants.filter((p) => p._count.souhaits === 0).map((p) => p.prenom);
+  if (groupe.nomsDeCode && vides.length && f?.get("forcer") !== "on") {
+    return {
+      erreur: `Mode mystère : la liste est obligatoire, et ${vides.length > 1 ? `${vides.length} personnes n'ont` : "1 personne n'a"} encore rien noté (${vides.join(", ")}). Relancez-les, ou cochez « Lancer quand même ».`,
+    };
+  }
 
   const resultat = tirer(participants.map((p) => p.id), exclusions.map((e) => ({ a: e.aId, b: e.bId })));
   if (!resultat) return { erreur: "Impossible de faire un tirage avec ces exclusions. Retirez-en une ou deux." };
@@ -171,7 +188,7 @@ export type Inscription = { jeton: string; nom: string; prenom: string } | { err
 export async function rejoindreGroupe(jetonInvitation: string, _: unknown, f: FormData): Promise<Inscription> {
   const groupe = await prisma.groupe.findUnique({
     where: { jetonInvitation },
-    include: { participants: { select: { prenom: true } } },
+    include: { participants: { select: { prenom: true, nomDeCode: true } } },
   });
   if (!groupe) return { erreur: "Ce lien d'invitation n'est plus valable. Demandez-en un nouveau à l'organisateur." };
   if (groupe.tirageLe) return { erreur: "Le tirage est déjà fait : demandez à l'organisateur de vous ajouter." };
@@ -186,10 +203,29 @@ export async function rejoindreGroupe(jetonInvitation: string, _: unknown, f: Fo
   if ("erreur" in coordonnees) return coordonnees;
 
   const p = await prisma.participant.create({
-    data: { groupeId: groupe.id, prenom, jeton: nouveauJeton(), ...coordonnees },
+    data: {
+      groupeId: groupe.id,
+      prenom,
+      nomDeCode: nomDeCodeAleatoire(groupe.participants.map((x) => x.nomDeCode)),
+      jeton: nouveauJeton(),
+      ...coordonnees,
+    },
   });
   revalidatePath("/", "layout");
   return { jeton: p.jeton, nom: groupe.nom, prenom };
+}
+
+/** « Tirer un autre nom de code » : un nouveau, toujours unique dans le groupe. */
+export async function changerNomDeCode(jeton: string) {
+  const moi = await participantParJeton(jeton);
+  // Après le tirage, le nom de code est écrit sur le paquet : il ne bouge plus.
+  if (moi.groupe.tirageLe) throw new Error("Le tirage est fait : votre nom de code est figé, c'est lui qui sera écrit sur votre paquet.");
+  const autres = await prisma.participant.findMany({ where: { groupeId: moi.groupeId }, select: { nomDeCode: true } });
+  await prisma.participant.update({
+    where: { id: moi.id },
+    data: { nomDeCode: nomDeCodeAleatoire(autres.map((p) => p.nomDeCode)) },
+  });
+  revalidatePath("/", "layout");
 }
 
 export async function modifierCoordonnees(jeton: string, _: Etat, f: FormData): Promise<Etat> {

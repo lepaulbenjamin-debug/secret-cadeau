@@ -58,6 +58,15 @@ export function FormulaireCreation() {
         <textarea id="message" name="message" rows={2} className="champ" maxLength={500} placeholder="Rendez-vous chez Mamie le 24 au soir !" />
       </div>
 
+      <label className="flex items-start gap-3 rounded-2xl bg-creme p-4 text-sm">
+        <input type="checkbox" name="nomsDeCode" className="mt-0.5 size-4 shrink-0 accent-[var(--sapin)]" />
+        <span>
+          <strong>🕵️ Mode mystère</strong> — chacun reçoit un nom de code marrant (« Pingouin Farceur 🐧 »). On offre à un
+          nom de code sans savoir qui c&apos;est, en choisissant uniquement d&apos;après sa liste, et on écrit le nom sur le
+          paquet. Les listes deviennent obligatoires.
+        </span>
+      </label>
+
       <button type="submit" className="bouton w-full" disabled={enCours}>
         {enCours ? "Création…" : "Créer le groupe"}
       </button>

@@ -78,7 +78,7 @@ export function ImportListe({ jeton, listeExterne, mystere = false }: { jeton: s
           <p className="mt-1 text-xs text-doux">
             {mystere
               ? "Mode mystère : ce lien n'est pas montré aux autres (il pourrait dévoiler votre nom). Importez plutôt vos idées."
-              : "Les listes Amazon ne peuvent pas être importées, mais leur lien peut être affiché aux autres."}
+              : "Listes Listy publiques et la plupart des sites de listes : importables. Listes Amazon : leur lien peut être affiché aux autres, mais pas importé."}
           </p>
         </div>
 
@@ -97,7 +97,7 @@ export function ImportListe({ jeton, listeExterne, mystere = false }: { jeton: s
           </button>
         </div>
 
-        {enCours && <p className="text-sm text-doux">Lecture en cours…</p>}
+        {enCours && <p className="text-sm text-doux">Lecture en cours… Pour une longue liste, comptez jusqu&apos;à une demi-minute.</p>}
         {note && <p className="rounded-xl bg-or/20 p-3 text-sm">{note}</p>}
         {note && lienListe && !apercu?.length && (
           <button type="button" disabled={enCours} onClick={() => enregistrerLien(lienListe)} className="bouton bouton-discret !min-h-9 !px-3 text-sm">

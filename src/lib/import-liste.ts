@@ -137,3 +137,84 @@ export function extraireListe(html: string, base: string): { idees: IdeeImportee
   if (structurees.length === 1) return { idees: structurees, methode: "donnees" };
   return { idees: [], methode: "aucune" };
 }
+
+/* ───────────────────────────── Listy (listy.fr) ───────────────────────────── */
+
+export function estListy(url: string): boolean {
+  try {
+    return /(^|\.)listy\.fr$/i.test(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Une liste Listy publique : chaque idée est un bloc `<div id="product_…">` avec
+ * l'image (et son texte alternatif), le lien vers sa page `/envies/…`, le prix.
+ * Le lien de la boutique n'est que sur la page de l'idée : voir `lienMarchand`.
+ */
+export function extraireListy(html: string, base: string): IdeeImportee[] {
+  const blocs = html.split(/<div id="product_/).slice(1);
+  const sortie: IdeeImportee[] = [];
+  const vus = new Set<string>();
+  for (const bloc of blocs) {
+    const fiche = bloc.match(/href="(\/envies\/[^"/?#]+)"/)?.[1];
+    if (!fiche || vus.has(fiche)) continue;
+    vus.add(fiche);
+    const alt = bloc.match(/<img[^>]*\balt="([^"]{2,200})"/)?.[1];
+    const texteLien = [...bloc.matchAll(new RegExp(`href="${fiche.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*>([\\s\\S]*?)</a>`, "g"))]
+      .map((m) => decoder(m[1].replace(/<[^>]+>/g, " ")))
+      .find((t) => t.length > 1);
+    const titre = decoder(alt ?? texteLien ?? "").replace(/^[\s•·*–-]+/, "").slice(0, 120);
+    if (!titre) continue;
+    const image = absolue(decoder(bloc.match(/<img[^>]*\bsrc="([^"]+)"/)?.[1] ?? ""), base).replace(/^http:/, "https:");
+    const prix = lirePrix(bloc.match(/(\d[\d\s.]*[,.]\d{2})\s*€/)?.[1] ?? null);
+    sortie.push({ titre, lien: absolue(fiche, base), image, prix });
+    if (sortie.length >= MAX_IMPORT) break;
+  }
+  return sortie;
+}
+
+/**
+ * Listy affiche les idées libres, et charge À PART celles déjà réservées
+ * (`<turbo-frame src="…/envies-reservees">`). Pour un import, il les faut toutes.
+ */
+export function cadresListy(html: string, base: string): string[] {
+  return [...html.matchAll(/<turbo-frame[^>]*\bsrc="([^"]*envies[^"]*)"/gi)].map((m) => absolue(decoder(m[1]), base)).filter(Boolean);
+}
+
+/**
+ * Sur la page d'une idée : le lien « Voir sur le site marchand ». Il peut être
+ * INTERNE (Listy passe par `/envies/…/redirection`) : à l'appelant de suivre la
+ * redirection. À défaut de ce libellé, le premier lien vers un autre site.
+ */
+export function lienMarchand(html: string, base: string): string | null {
+  for (const [, href, interieur] of html.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    if (/site marchand|voir sur le site|acheter sur/i.test(decoder(interieur.replace(/<[^>]+>/g, " ")))) {
+      const lien = absolue(decoder(href), base);
+      if (lien) return lien;
+    }
+  }
+  let hoteBase = "";
+  try {
+    hoteBase = new URL(base).hostname.replace(/^www\./, "");
+  } catch {}
+  const candidats = [...html.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)]
+    .map(([, href, interieur]) => ({ lien: absolue(decoder(href), base), texte: decoder(interieur.replace(/<[^>]+>/g, " ")) }))
+    .filter(({ lien }) => {
+      if (!lien) return false;
+      const hote = new URL(lien).hostname.replace(/^www\./, "");
+      return hote !== hoteBase && !hote.endsWith(`.${hoteBase}`) && !HOTES_IGNORES.test(`${hote}.`) && new URL(lien).pathname.length > 1;
+    });
+  return candidats[0]?.lien ?? null;
+}
+
+/** La page dit-elle que la liste est privée ? (Listy redirige vers une demande d'accès) */
+export function pagePrivee(html: string, url: string): boolean {
+  return /demande-acces/i.test(url) || /(cette )?liste est priv[ée]e|this (list|wishlist) is private|liste privée/i.test(html.replace(/<[^>]+>/g, " "));
+}
+
+/** La page décrit-elle UN produit ? (avant de la proposer comme une seule idée) */
+export function pageProduit(html: string): boolean {
+  return /"@type"\s*:\s*"Product"/.test(html) || /property=["']og:type["'][^>]*content=["']product/i.test(html) || /product:price:amount/i.test(html);
+}

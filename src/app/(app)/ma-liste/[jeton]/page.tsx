@@ -18,6 +18,13 @@ import { compteARebours, dateLongue } from "@/lib/format";
 import { OCCASIONS, titreListe } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * L'import d'une liste (actions-import.ts) lit une page par idée pour trouver le
+ * lien de la boutique : une vingtaine de secondes pour une liste de 20 idées.
+ * Les actions serveur héritent de la durée maximale de la page qui les appelle.
+ */
+export const maxDuration = 60;
+
 export const metadata: Metadata = { title: "Ma liste de cadeaux", robots: { index: false, follow: false } };
 
 export default async function MaListe({ params, searchParams }: { params: Promise<{ jeton: string }>; searchParams: Promise<{ nouveau?: string }> }) {

@@ -298,3 +298,37 @@ export async function apercuDuLien(
   const lu = extraireApercu(page.html, page.url);
   return { titre: lu.titre || deLAdresse.titre, image: lu.image, prix: lu.prix };
 }
+
+/**
+ * L'adresse finale d'un lien de redirection (« voir sur le site marchand »), sans
+ * lire la page d'arrivée. Dès qu'une redirection mène chez Amazon, on s'arrête :
+ * son adresse suffit, et Amazon n'est jamais contacté. `null` en cas d'échec.
+ */
+export async function suivreRedirections(
+  lien: string,
+  { fetcher = fetch, resoudre = resolveurParDefaut }: { fetcher?: typeof fetch; resoudre?: Resolveur } = {},
+): Promise<string | null> {
+  let courant = lien;
+  try {
+    for (let saut = 0; saut < 6; saut++) {
+      if (boutiqueAmazon(courant)) return courant;
+      if (!(await adressePublique(courant, resoudre))) return null;
+      const r = await fetcher(courant, {
+        method: "GET",
+        redirect: "manual",
+        signal: AbortSignal.timeout(6000),
+        headers: { "user-agent": "Mozilla/5.0 (compatible; QuiOffreBot/1.0; +https://www.quioffre.fr)" },
+      });
+      await r.body?.cancel().catch(() => {});
+      const suivant = r.headers.get("location");
+      if (r.status >= 300 && r.status < 400 && suivant) {
+        courant = new URL(suivant, courant).toString();
+        continue;
+      }
+      return r.ok ? courant : null;
+    }
+  } catch {
+    // Lien mort ou site lent.
+  }
+  return null;
+}

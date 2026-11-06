@@ -203,6 +203,29 @@ export async function annulerTirage(jetonAdmin: string) {
   revalidatePath("/", "layout");
 }
 
+export type Suppression = { jetons: string[] } | { erreur: string };
+
+/**
+ * Supprime le groupe et tout ce qu'il contient : participants, listes,
+ * réservations, questions, tirage, rappels (suppression en cascade).
+ *
+ * Le nom du groupe doit être retapé : un appui distrait ne doit pas effacer
+ * les listes de toute une famille. Renvoie les liens du groupe pour que
+ * l'appareil de l'organisateur les oublie.
+ */
+export async function supprimerGroupe(jetonAdmin: string, _: unknown, f: FormData): Promise<Suppression> {
+  const groupe = await prisma.groupe.findUnique({ where: { jetonAdmin }, include: { participants: { select: { jeton: true } } } });
+  if (!groupe) return { erreur: "Ce groupe n'existe plus." };
+  const tape = texte(f, "confirmation", 80).toLowerCase().replace(/\s+/g, " ");
+  if (tape !== groupe.nom.toLowerCase().replace(/\s+/g, " ")) return { erreur: `Tapez exactement « ${groupe.nom} » pour confirmer.` };
+  await prisma.groupe.delete({ where: { id: groupe.id } });
+  // ⚠️ Pas de revalidatePath ici : il re-rendrait la page courante, qui n'existe
+  // plus, et la page « introuvable » remplacerait le formulaire avant qu'il ait
+  // pu nettoyer l'appareil et rediriger. Les pages du groupe sont dynamiques :
+  // elles tombent d'elles-mêmes en 404.
+  return { jetons: [jetonAdmin, ...groupe.participants.map((p) => p.jeton)] };
+}
+
 /** Un nouveau lien d'invitation : l'ancien cesse de marcher (utile s'il a trop circulé). */
 export async function regenererInvitation(jetonAdmin: string) {
   const groupe = await groupeParJetonAdmin(jetonAdmin);

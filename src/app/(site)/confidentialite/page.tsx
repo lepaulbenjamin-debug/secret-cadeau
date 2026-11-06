@@ -70,8 +70,8 @@ export default function Confidentialite() {
       <h2>Combien de temps ?</h2>
       <p>
         Les données d&apos;un groupe sont conservées tant que le groupe existe. L&apos;organisateur peut retirer un participant
-        (ses données et sa liste sont alors effacées) ; vous pouvez aussi nous demander la suppression d&apos;un groupe ou de vos
-        données.
+        (ses données et sa liste sont alors effacées) ou supprimer le groupe entier depuis sa page : tout est alors effacé
+        définitivement. Vous pouvez aussi nous demander la suppression d&apos;un groupe ou de vos données.
       </p>
 
       <h2>Vos droits</h2>

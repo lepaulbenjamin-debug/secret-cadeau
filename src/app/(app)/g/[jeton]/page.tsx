@@ -20,6 +20,7 @@ import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Formulaire } from "@/components/formulaire";
 import { Partager } from "@/components/partager";
 import { SeSouvenir } from "@/components/se-souvenir";
+import { SupprimerGroupe } from "@/components/supprimer-groupe";
 import { compteARebours, dateLongue } from "@/lib/format";
 import { assurerNomsDeCode } from "@/lib/acces";
 import { nouveauJeton } from "@/lib/jeton";
@@ -326,6 +327,13 @@ export default async function Organisation({
               <textarea id="message" name="message" rows={2} className="champ" defaultValue={groupe.message} maxLength={500} />
             </div>
           </Formulaire>
+        </div>
+      </details>
+
+      <details className="carte border-cerise/30">
+        <summary className="cursor-pointer font-titre text-xl font-semibold text-cerise">Supprimer le groupe</summary>
+        <div className="mt-4">
+          <SupprimerGroupe jetonAdmin={jeton} nom={groupe.nom} />
         </div>
       </details>
 

@@ -30,8 +30,8 @@ const config: CapacitorConfig = {
     androidScheme: "https",
     cleartext: false,
   },
-  ios: { backgroundColor: "#f8f2e7" },
-  android: { backgroundColor: "#f8f2e7" },
+  ios: { backgroundColor: "#faf6f0" },
+  android: { backgroundColor: "#faf6f0" },
 };
 
 export default config;

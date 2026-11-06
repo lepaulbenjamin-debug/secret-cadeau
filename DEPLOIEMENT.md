@@ -122,6 +122,6 @@ npx cap open ios        # Xcode → Archive → App Store Connect
 npx cap open android    # Android Studio → Build → Generate Signed Bundle
 ```
 
-Icônes : `public/icone-1024.png` ; `node scripts/icones.mjs` les régénère depuis `src/app/icon.svg`.
+Icônes : `public/icone-1024.png` pour les stores (fond plein, les stores arrondissent eux-mêmes) ; `public/icone-maskable-512.png` pour Android ; `src/app/icon.png` et `apple-icon.png` pour le navigateur et l'iPhone. Logo : `public/logo-clair.png`, `logo-sombre.png` (thème sombre), `logo-grand.png`.
 
 ⚠️ L'identifiant `fr.quioffre.app` (dans `capacitor.config.ts`) ne doit plus changer après la première publication.

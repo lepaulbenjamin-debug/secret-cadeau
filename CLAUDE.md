@@ -29,3 +29,9 @@ Voir `README.md` et `DEPLOIEMENT.md`.
   `prisma migrate diff --from-migrations … --to-schema-datamodel …` (doit répondre « No difference »).
 - Après un changement : `npm test`, `npx tsc --noEmit`, `npm run lint`, construction
   (`npm run build:local`), et un parcours réel dans le navigateur (Playwright).
+
+## Livraison
+
+- **Fusionner systématiquement** (consigne du propriétaire) : une fois les vérifications passées,
+  pousser la branche, ouvrir la pull request vers `main` et la fusionner, puis vérifier que la
+  nouvelle version répond sur quioffre.vercel.app.

@@ -56,6 +56,13 @@ export const GUIDES: PageSite[] = [
     maj: "2026-11-06",
   },
   {
+    chemin: "/liste-cadeaux-anniversaire",
+    titre: "Liste de cadeaux d'anniversaire : la créer et la partager",
+    court: "Liste d'anniversaire",
+    description: "Créer une liste de cadeaux d'anniversaire en ligne, gratuite et sans compte, la partager et laisser vos proches réserver sans doublon.",
+    maj: "2026-11-07",
+  },
+  {
     chemin: "/faq",
     titre: "Questions fréquentes sur Qui Offre",
     court: "FAQ",

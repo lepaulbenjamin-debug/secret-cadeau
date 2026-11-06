@@ -64,14 +64,24 @@ export function Article({ page, resume, children }: { page: PageSite; resume: Re
 }
 
 /** L'encart « Organiser un tirage », à placer une ou deux fois par guide. */
-export function AppelAction({ titre = "Prêt à organiser votre tirage ?", texte }: { titre?: string; texte?: string }) {
+export function AppelAction({
+  titre = "Prêt à organiser votre tirage ?",
+  texte,
+  href = "/nouveau",
+  bouton = "Créer mon groupe",
+}: {
+  titre?: string;
+  texte?: string;
+  href?: string;
+  bouton?: string;
+}) {
   return (
     <aside className="not-prose my-8 rounded-2xl bg-sapin p-6 text-center text-carte">
       <p className="font-titre text-xl font-semibold">{titre}</p>
       <p className="mt-1 text-sm opacity-90">
         {texte ?? "Tirage au sort, exclusions, listes d'envies et rappels : c'est gratuit et sans compte."}
       </p>
-      <Link href="/nouveau" className="bouton bouton-cerise mt-4">Créer mon groupe</Link>
+      <Link href={href} className="bouton bouton-cerise mt-4">{bouton}</Link>
     </aside>
   );
 }

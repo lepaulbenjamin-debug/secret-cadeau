@@ -131,7 +131,8 @@ export default function Page() {
         Pour un anniversaire, une naissance ou un mariage, Qui Offre propose une{" "}
         <Link href="/liste/nouvelle">liste de cadeaux sans tirage au sort</Link> : vous notez vos envies, vous partagez
         le lien, et vos proches réservent « Je m&apos;en occupe » avec leur prénom. Ils voient ce que les autres ont
-        réservé, vous jamais.
+        réservé, vous jamais. Tous nos conseils sont dans le guide{" "}
+        <Link href="/liste-cadeaux-anniversaire">liste de cadeaux d&apos;anniversaire</Link>.
       </p>
       <AppelActionListe />
       <p>

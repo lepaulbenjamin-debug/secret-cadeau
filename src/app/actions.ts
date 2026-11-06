@@ -10,7 +10,7 @@ import { lienSur, lirePrenoms } from "@/lib/format";
 import { nouveauJeton } from "@/lib/jeton";
 import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
 import { prisma } from "@/lib/prisma";
-import { envoyerRappels } from "@/lib/rappels-serveur";
+import { envoyerBienvenueOrganisateur, envoyerRappels } from "@/lib/rappels-serveur";
 import { tirer } from "@/lib/tirage";
 
 export type Etat = { erreur?: string; ok?: string } | null;
@@ -20,6 +20,14 @@ const texte = (f: FormData, cle: string, max = 200) => String(f.get(cle) ?? "").
 function entierPositif(brut: string): number | null {
   const n = Number.parseInt(brut.replace(/[^\d]/g, ""), 10);
   return Number.isFinite(n) && n > 0 ? Math.min(n, 100000) : null;
+}
+
+const EMAIL_VALIDE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** E-mail de l'organisateur : vide, ou valide. `null` = invalide. */
+function emailOrganisateur(f: FormData): string | null {
+  const e = texte(f, "emailOrganisateur", 120).toLowerCase();
+  return !e || EMAIL_VALIDE.test(e) ? e : null;
 }
 
 function dateOuNull(brut: string): Date | null {
@@ -42,6 +50,8 @@ export async function creerGroupe(_: unknown, f: FormData): Promise<GroupeCree> 
 
   if (!nom) return { erreur: "Donnez un nom au groupe." };
   if (participe && !organisateur) return { erreur: "Indiquez votre prénom." };
+  const email = emailOrganisateur(f);
+  if (email === null) return { erreur: "Cette adresse e-mail ne semble pas valide." };
 
   // La liste peut rester vide : chacun peut s'inscrire avec le lien d'invitation.
   // Le minimum de trois participants est exigé au tirage, pas ici.
@@ -58,14 +68,31 @@ export async function creerGroupe(_: unknown, f: FormData): Promise<GroupeCree> 
       budget: entierPositif(texte(f, "budget", 10)),
       message: texte(f, "message", 500),
       nomsDeCode: f.get("nomsDeCode") === "on",
+      emailOrganisateur: email,
       jetonAdmin: nouveauJeton(),
       jetonInvitation: nouveauJeton(),
-      participants: { create: prenoms.map((prenom, i) => ({ prenom, nomDeCode: noms[i], jeton: nouveauJeton() })) },
+      participants: {
+        // L'organisateur qui participe reçoit aussi les rappels des participants, à la même adresse.
+        create: prenoms.map((prenom, i) => ({
+          prenom,
+          nomDeCode: noms[i],
+          jeton: nouveauJeton(),
+          email: participe && i === 0 ? email : "",
+        })),
+      },
     },
     include: { participants: { orderBy: { creeLe: "asc" } } },
   });
 
   const perso = participe ? groupe.participants.find((p) => p.prenom === organisateur) : null;
+  if (email) {
+    // Son lien d'organisateur par e-mail, après la réponse : la création n'attend pas l'envoi.
+    after(() =>
+      envoyerBienvenueOrganisateur(groupe.id, { prenom: participe ? organisateur : "", jetonPerso: perso?.jeton ?? null }).then((r) =>
+        console.log("Bienvenue organisateur :", JSON.stringify(r)),
+      ),
+    );
+  }
   return { jetonAdmin: groupe.jetonAdmin, nom: groupe.nom, jetonPerso: perso?.jeton ?? null };
 }
 
@@ -73,6 +100,8 @@ export async function modifierGroupe(jetonAdmin: string, _: Etat, f: FormData): 
   const groupe = await groupeParJetonAdmin(jetonAdmin);
   const nom = texte(f, "nom", 80);
   if (!nom) return { erreur: "Le nom ne peut pas être vide." };
+  const email = emailOrganisateur(f);
+  if (email === null) return { erreur: "Cette adresse e-mail ne semble pas valide." };
   await prisma.groupe.update({
     where: { id: groupe.id },
     data: {
@@ -81,6 +110,8 @@ export async function modifierGroupe(jetonAdmin: string, _: Etat, f: FormData): 
       budget: entierPositif(texte(f, "budget", 10)),
       message: texte(f, "message", 500),
       nomsDeCode: f.get("nomsDeCode") === "on",
+      emailOrganisateur: email,
+      rappelsOrganisateur: f.get("rappelsOrganisateur") === "on",
     },
   });
   revalidatePath("/", "layout");

@@ -50,7 +50,7 @@ export function rappelDu(g: GroupeRappel, p: ParticipantRappel, maintenant = new
   return null;
 }
 
-const echapper = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+export const echapper = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 function quand(g: GroupeRappel, maintenant: Date): string {
   if (!g.dateEchange) return "";
@@ -101,31 +101,65 @@ export function contenuRappel(
   }
   const lignes = phrases.filter(Boolean);
 
+  const { html, texte } = gabaritEmail({
+    site,
+    groupe: g.nom,
+    bonjour: p.prenom,
+    lignes,
+    boutons: [{ lien, libelle: "Ouvrir mon espace", texte: "Votre espace" }],
+    avertissement: "Ce lien est personnel : ne le transférez pas, il dévoilerait votre tirage.",
+    raison: `vous participez à « ${g.nom} »`,
+    reglages,
+  });
+
+  return { sujet: sujets[type], html, texte, desabonnement };
+}
+
+/**
+ * La mise en page commune à tous les e-mails : logo, nom du groupe, salutation,
+ * paragraphes, un ou plusieurs boutons, puis le pied avec le lien pour ne plus
+ * rien recevoir. Une version texte est produite en même temps.
+ */
+export function gabaritEmail(o: {
+  site: string;
+  groupe: string;
+  bonjour: string;
+  lignes: string[];
+  boutons: { lien: string; libelle: string; texte: string; discret?: boolean }[];
+  avertissement?: string;
+  raison: string;
+  reglages: string;
+}): { html: string; texte: string } {
   const texte = [
-    `Bonjour ${p.prenom},`,
+    o.bonjour ? `Bonjour ${o.bonjour},` : "Bonjour,",
     "",
-    ...lignes,
+    ...o.lignes,
     "",
-    `Votre espace : ${lien}`,
-    "(lien personnel, ne le transférez pas)",
+    ...o.boutons.map((b) => `${b.texte} : ${b.lien}`),
+    ...(o.avertissement ? [`(${o.avertissement})`] : []),
     "",
     "—",
     "Qui Offre",
-    `Ne plus recevoir ces rappels : ${reglages}`,
+    `Ne plus recevoir ces e-mails : ${o.reglages}`,
   ].join("\n");
+
+  const bouton = (b: (typeof o.boutons)[number]) =>
+    b.discret
+      ? `<p style="margin:0 0 10px;font-size:15px"><a href="${echapper(b.lien)}" style="color:#2b2a66;font-weight:600">${echapper(b.libelle)}</a></p>`
+      : `<p style="margin:20px 0 10px"><a href="${echapper(b.lien)}" style="display:inline-block;background:#2b2a66;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:999px">${echapper(b.libelle)}</a></p>`;
 
   const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#faf6f0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#232246">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #e7e1d6;border-radius:20px" cellpadding="0" cellspacing="0"><tr><td style="padding:28px 24px">
-<img src="${echapper(site)}/logo-clair.png" alt="Qui Offre" width="99" height="44" style="display:block;margin:0 0 16px;border:0">
-<p style="margin:0 0 4px;font-size:14px;color:#cc3a33;font-weight:600">${echapper(g.nom)}</p>
-<h1 style="margin:0 0 16px;font-size:24px;font-family:Georgia,serif">Bonjour ${echapper(p.prenom)} !</h1>
-${lignes.map((l) => `<p style="margin:0 0 12px;font-size:16px;line-height:1.5">${echapper(l)}</p>`).join("\n")}
-<p style="margin:24px 0"><a href="${echapper(lien)}" style="display:inline-block;background:#2b2a66;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:999px">Ouvrir mon espace</a></p>
-<p style="margin:0;font-size:13px;color:#66627a">Ce lien est personnel : ne le transférez pas, il dévoilerait votre tirage.</p>
+<img src="${echapper(o.site)}/logo-clair.png" alt="Qui Offre" width="99" height="44" style="display:block;margin:0 0 16px;border:0">
+<p style="margin:0 0 4px;font-size:14px;color:#cc3a33;font-weight:600">${echapper(o.groupe)}</p>
+<h1 style="margin:0 0 16px;font-size:24px;font-family:Georgia,serif">Bonjour${o.bonjour ? ` ${echapper(o.bonjour)}` : ""} !</h1>
+${o.lignes.map((l) => `<p style="margin:0 0 12px;font-size:16px;line-height:1.5">${echapper(l)}</p>`).join("\n")}
+${o.boutons.map(bouton).join("\n")}
+${o.avertissement ? `<p style="margin:12px 0 0;font-size:13px;color:#66627a">${echapper(o.avertissement)}</p>` : ""}
 </td></tr></table>
-<p style="font-size:12px;color:#66627a;margin:16px 0 0">Vous recevez ce message car vous participez à « ${echapper(g.nom)} ». <a href="${echapper(reglages)}" style="color:#66627a">Ne plus recevoir de rappels</a></p>
+<p style="font-size:12px;color:#66627a;margin:16px 0 0">Vous recevez ce message car ${echapper(o.raison)}. <a href="${echapper(o.reglages)}" style="color:#66627a">Ne plus recevoir ces e-mails</a></p>
 </td></tr></table></body></html>`;
 
-  return { sujet: sujets[type], html, texte, desabonnement };
+  return { html, texte };
 }

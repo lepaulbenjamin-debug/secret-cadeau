@@ -12,7 +12,11 @@ import { prisma } from "@/lib/prisma";
  * attend un vrai geste.
  */
 export async function POST(requete: Request) {
-  const jeton = new URL(requete.url).searchParams.get("j") ?? "";
+  const params = new URL(requete.url).searchParams;
+  const jeton = params.get("j") ?? "";
+  const jetonAdmin = params.get("o") ?? "";
   if (jeton) await prisma.participant.updateMany({ where: { jeton }, data: { rappelsEmail: false } });
+  // Un organisateur (lien d'organisateur) : plus de relance ni d'e-mail d'organisation.
+  if (jetonAdmin) await prisma.groupe.updateMany({ where: { jetonAdmin }, data: { rappelsOrganisateur: false } });
   return NextResponse.json({ ok: true });
 }

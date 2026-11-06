@@ -35,6 +35,15 @@ export function FormulaireCreation() {
       </div>
 
       <div>
+        <label className="etiquette" htmlFor="emailOrganisateur">Votre e-mail <span className="font-normal text-doux">(facultatif)</span></label>
+        <input id="emailOrganisateur" name="emailOrganisateur" type="email" className="champ" maxLength={120} autoComplete="email" placeholder="camille@exemple.fr" />
+        <p className="mt-1 text-sm text-doux">
+          Pour recevoir votre lien d&apos;organisateur (et ne jamais le perdre), et un rappel si le tirage n&apos;est pas fait
+          une semaine avant l&apos;échange. Visible de personne.
+        </p>
+      </div>
+
+      <div>
         <label className="etiquette" htmlFor="participants">Les autres participants <span className="font-normal text-doux">(facultatif)</span></label>
         <textarea id="participants" name="participants" rows={5} className="champ" placeholder={"Un prénom par ligne\nLéa\nTom\nMamie Jo"} />
         <p className="mt-1 text-sm text-doux">

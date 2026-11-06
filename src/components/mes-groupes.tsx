@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown, Gift, X } from "lucide-react";
+import { Cake, Crown, Gift, X } from "lucide-react";
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 
@@ -18,6 +18,20 @@ function instantane(): LienGarde[] {
 }
 
 const VIDE: LienGarde[] = [];
+
+const CHEMINS: Record<LienGarde["type"], (j: string) => string> = {
+  admin: (j) => `/g/${j}`,
+  perso: (j) => `/p/${j}`,
+  "liste-proprio": (j) => `/ma-liste/${j}`,
+  liste: (j) => `/liste/${j}`,
+};
+
+function sousTitre(l: LienGarde): string {
+  if (l.type === "admin") return "Vous organisez";
+  if (l.type === "liste-proprio") return "Votre liste de cadeaux";
+  if (l.type === "liste") return "Une liste à consulter";
+  return l.pourAutre ? `Espace de ${l.prenom}` : `Votre espace${l.prenom ? `, ${l.prenom}` : ""}`;
+}
 
 export function MesGroupes() {
   const liens = useSyncExternalStore(
@@ -42,13 +56,11 @@ export function MesGroupes() {
         {liens.map((l) => (
           <li key={`${l.type}-${l.jeton}`} className="carte flex items-center gap-3 !p-3">
             <span className={`grid size-10 shrink-0 place-items-center rounded-full ${l.type === "admin" ? "bg-cerise-clair text-cerise" : "bg-sapin-clair text-sapin"}`}>
-              {l.type === "admin" ? <Crown size={18} /> : <Gift size={18} />}
+              {l.type === "admin" ? <Crown size={18} /> : l.type.startsWith("liste") ? <Cake size={18} /> : <Gift size={18} />}
             </span>
-            <Link href={l.type === "admin" ? `/g/${l.jeton}` : `/p/${l.jeton}`} className="min-w-0 flex-1">
+            <Link href={CHEMINS[l.type](l.jeton)} className="min-w-0 flex-1">
               <span className="block truncate font-semibold">{l.groupe}</span>
-              <span className="block text-sm text-doux">
-                {l.type === "admin" ? "Vous organisez" : l.pourAutre ? `Espace de ${l.prenom}` : `Votre espace${l.prenom ? `, ${l.prenom}` : ""}`}
-              </span>
+              <span className="block text-sm text-doux">{sousTitre(l)}</span>
             </Link>
             <button
               type="button"

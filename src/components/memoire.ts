@@ -5,12 +5,15 @@
  * groupe. Elle reste sur l'appareil et n'est jamais envoyée au serveur.
  */
 export type LienGarde = {
-  type: "admin" | "perso";
+  /** admin : organisateur · perso : participant · liste-proprio : sa propre liste · liste : la liste d'un proche */
+  type: "admin" | "perso" | "liste-proprio" | "liste";
   jeton: string;
   groupe: string;
   prenom?: string;
   /** Espace d'une autre personne, inscrite depuis cet appareil (un enfant, un proche). */
   pourAutre?: boolean;
+  /** Pour « liste-proprio » : le lien de partage de la même liste (on y masque alors les réservations). */
+  jetonPartage?: string;
   vuLe: number;
 };
 
@@ -32,9 +35,29 @@ export function garderLien(lien: Omit<LienGarde, "vuLe">) {
     const autres = liens.filter((l) => l !== ancien);
     // Rouvrir l'espace de Léo depuis ce téléphone ne doit pas en faire « votre » espace.
     const pourAutre = lien.pourAutre ?? ancien?.pourAutre;
-    localStorage.setItem(CLE, JSON.stringify([{ ...lien, pourAutre, vuLe: Date.now() }, ...autres].slice(0, 30)));
+    const jetonPartage = lien.jetonPartage ?? ancien?.jetonPartage;
+    localStorage.setItem(CLE, JSON.stringify([{ ...lien, pourAutre, jetonPartage, vuLe: Date.now() }, ...autres].slice(0, 30)));
   } catch {
     // Navigation privée ou stockage bloqué : la page marche sans.
+  }
+}
+
+/** Cet appareil est-il celui de la personne fêtée ? (elle a le lien propriétaire de cette liste) */
+export function estProprioDe(jetonPartage: string): boolean {
+  return lireLiens().some((l) => l.type === "liste-proprio" && l.jetonPartage === jetonPartage);
+}
+
+/** Un identifiant propre à cet appareil, pour annuler ses propres réservations. */
+export function jetonAppareil(): string {
+  try {
+    let j = localStorage.getItem("quioffre:appareil");
+    if (!j) {
+      j = crypto.randomUUID().replace(/-/g, "");
+      localStorage.setItem("quioffre:appareil", j);
+    }
+    return j;
+  } catch {
+    return "";
   }
 }
 

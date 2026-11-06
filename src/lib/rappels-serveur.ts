@@ -150,3 +150,18 @@ export async function envoyerAjustements(participantIds: string[]): Promise<Bila
   bilan.ignores = participantIds.length - personnes.length;
   return bilan;
 }
+
+/** Ses liens par e-mail, juste après la création d'une liste. Une seule fois. */
+export async function envoyerBienvenueListe(listeId: string) {
+  if (!process.env.RESEND_API_KEY) return { ok: false, motif: "RESEND_API_KEY absente" };
+  const l = await prisma.liste.findUnique({ where: { id: listeId } });
+  if (!l || !l.emailProprio || l.bienvenueEnvoyeeLe) return { ok: false, motif: "rien à envoyer" };
+  const { count } = await prisma.liste.updateMany({ where: { id: l.id, bienvenueEnvoyeeLe: null }, data: { bienvenueEnvoyeeLe: new Date() } });
+  if (!count) return { ok: false, motif: "déjà envoyé" };
+  const { contenuBienvenueListe } = await import("./emails-listes");
+  const r = await envoyerEmail({ a: l.emailProprio, ...contenuBienvenueListe(l, { site: SITE_URL }) }).catch(
+    (e: Error) => ({ ok: false, motif: e.message }),
+  );
+  if (!r.ok) await prisma.liste.update({ where: { id: l.id }, data: { bienvenueEnvoyeeLe: null } });
+  return r;
+}

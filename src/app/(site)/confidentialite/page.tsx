@@ -39,6 +39,8 @@ export default function Confidentialite() {
           <tr><td>Prénom (et nom de code en mode mystère)</td><td>Faire le tirage, afficher les listes</td><td>Les membres du groupe (seulement le nom de code en mode mystère)</td></tr>
           <tr><td>E-mail de l&apos;organisateur (facultatif)</td><td>Lui envoyer son lien d&apos;organisateur, le relancer si le tirage tarde</td><td>Personne</td></tr>
           <tr><td>E-mail et téléphone (facultatifs)</td><td>Vous renvoyer votre lien, vous envoyer les rappels</td><td>L&apos;organisateur uniquement</td></tr>
+          <tr><td>Listes d&apos;anniversaire : prénom, occasion, date, idées, e-mail (facultatif)</td><td>Partager la liste, vous envoyer vos liens</td><td>Les personnes qui ont le lien de la liste (l&apos;e-mail : personne)</td></tr>
+          <tr><td>Réservations sur une liste : prénom du proche</td><td>Éviter les doublons</td><td>Les autres proches, jamais la personne fêtée</td></tr>
           <tr><td>Résultat du tirage</td><td>Vous dire à qui vous offrez</td><td>Vous seul</td></tr>
           <tr><td>Listes d&apos;envies, réservations, questions anonymes</td><td>Le fonctionnement du jeu</td><td>Le groupe (réservations cachées au propriétaire de la liste, auteur des questions caché)</td></tr>
         </tbody>

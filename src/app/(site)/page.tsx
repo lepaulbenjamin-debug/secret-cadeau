@@ -1,5 +1,6 @@
 import {
   Bell,
+  Cake,
   EyeOff,
   Gift,
   Link2,
@@ -40,6 +41,7 @@ const FONCTIONS = [
   { icone: MessageCircleQuestion, titre: "Questions anonymes", texte: "« Tu chausses du combien ? » : demandez sans vous trahir, la réponse s'affiche chez vous." },
   { icone: Bell, titre: "Rappels par e-mail", texte: "Le lien au moment du tirage, puis un rappel une semaine avant et la veille de l'échange." },
   { icone: Smartphone, titre: "Sur téléphone", texte: "S'installe sur l'écran d'accueil depuis le navigateur, sans passer par un store." },
+  { icone: Cake, titre: "Listes d'anniversaire", texte: "Hors Secret Santa aussi : une liste à partager pour un anniversaire, une naissance, un mariage." },
   { icone: ShieldCheck, titre: "Gratuit, sans compte", texte: "Pas d'inscription, pas de mot de passe, pas de publicité. Chacun garde simplement son lien." },
 ];
 
@@ -171,6 +173,27 @@ export default function Accueil() {
             le Noël en famille.
           </p>
           <Link href="/nouveau" className="bouton bouton-cerise mt-5">Essayer le mode mystère</Link>
+        </div>
+      </section>
+
+      {/* Listes d'anniversaire */}
+      <section className="mx-auto max-w-5xl px-4 pt-16" aria-labelledby="anniversaires">
+        <div className="grid items-center gap-6 rounded-3xl border border-trait bg-carte p-8 sm:grid-cols-[1.4fr_1fr] sm:p-10">
+          <div>
+            <p className="text-sm font-semibold tracking-widest text-cerise uppercase">🎂 Toute l&apos;année</p>
+            <h2 id="anniversaires" className="mt-2 font-titre text-3xl font-bold">Une liste de cadeaux pour votre anniversaire</h2>
+            <p className="mt-3 text-doux">
+              Pas de tirage cette fois : vous notez vos envies, vous partagez le lien, vos proches réservent « Je m&apos;en
+              occupe ». Plus de doublons, et vous ne voyez jamais ce qui a été réservé. Pour un anniversaire, une naissance,
+              un mariage…
+            </p>
+            <Link href="/liste/nouvelle" className="bouton bouton-cerise mt-5">Créer ma liste de cadeaux</Link>
+          </div>
+          <ul aria-hidden className="space-y-2 text-sm">
+            <li className="carte flex justify-between !py-3"><span>🎧 Un casque sans fil</span><span className="text-doux">60 €</span></li>
+            <li className="carte flex justify-between !py-3"><span>📚 Le tome 3 de ma saga</span><span className="text-doux">18 €</span></li>
+            <li className="carte flex justify-between !py-3 text-doux"><span className="line-through">🪴 Une plante</span><span>réservé par Tom</span></li>
+          </ul>
         </div>
       </section>
 

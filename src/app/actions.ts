@@ -10,6 +10,7 @@ import { lienSur, lirePrenoms } from "@/lib/format";
 import { nouveauJeton } from "@/lib/jeton";
 import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
 import { prisma } from "@/lib/prisma";
+import { dateOuNull, emailFacultatif, entierPositif, lireIdee, texte } from "@/lib/saisie";
 import { envoyerAjustements, envoyerBienvenueOrganisateur, envoyerRappels } from "@/lib/rappels-serveur";
 import { retirerDuTirage, tirer } from "@/lib/tirage";
 
@@ -25,26 +26,9 @@ export type Etat = { erreur?: string; ok?: string } | null;
  */
 export type Refus = { erreur: string } | void;
 
-const texte = (f: FormData, cle: string, max = 200) => String(f.get(cle) ?? "").trim().slice(0, max);
-
-function entierPositif(brut: string): number | null {
-  const n = Number.parseInt(brut.replace(/[^\d]/g, ""), 10);
-  return Number.isFinite(n) && n > 0 ? Math.min(n, 100000) : null;
-}
-
-const EMAIL_VALIDE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
 /** E-mail de l'organisateur : vide, ou valide. `null` = invalide. */
-function emailOrganisateur(f: FormData): string | null {
-  const e = texte(f, "emailOrganisateur", 120).toLowerCase();
-  return !e || EMAIL_VALIDE.test(e) ? e : null;
-}
+const emailOrganisateur = (f: FormData) => emailFacultatif(f, "emailOrganisateur");
 
-function dateOuNull(brut: string): Date | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(brut)) return null;
-  // Midi à Paris : la date reste la même quel que soit le fuseau de lecture.
-  return new Date(`${brut}T12:00:00+01:00`);
-}
 
 const MAX_PARTICIPANTS = 60;
 
@@ -397,26 +381,9 @@ export async function modifierCoordonnees(jeton: string, _: Etat, f: FormData): 
 
 /* ─────────────────────────────── Liste de souhaits ─────────────────────────────── */
 
-/** Une image d'idée : seulement en https, sinon rien (elle est affichée chez les autres). */
-function imageSure(brut: string): string {
-  const lien = lienSur(brut);
-  return lien.startsWith("https://") ? lien : "";
-}
-
-async function lireSouhait(f: FormData) {
-  return {
-    image: imageSure(texte(f, "image", 1000)),
-    titre: texte(f, "titre", 120),
-    // Un lien court Amazon (amzn.eu/…) est déplié : sinon il ne peut pas porter notre identifiant.
-    lien: await deplierLienCourt(lienSur(texte(f, "lien", 1000))),
-    prix: entierPositif(texte(f, "prix", 10)),
-    note: texte(f, "note", 300),
-  };
-}
-
 export async function ajouterSouhait(jeton: string, _: Etat, f: FormData): Promise<Etat> {
   const moi = await participantParJeton(jeton);
-  const s = await lireSouhait(f);
+  const s = await lireIdee(f);
   if (!s.titre) return { erreur: "Quel cadeau ?" };
   if ((await prisma.souhait.count({ where: { participantId: moi.id } })) >= 50) return { erreur: "50 idées au maximum." };
   await prisma.souhait.create({ data: { ...s, participantId: moi.id } });
@@ -426,7 +393,7 @@ export async function ajouterSouhait(jeton: string, _: Etat, f: FormData): Promi
 
 export async function modifierSouhait(jeton: string, souhaitId: string, _: Etat, f: FormData): Promise<Etat> {
   const moi = await participantParJeton(jeton);
-  const s = await lireSouhait(f);
+  const s = await lireIdee(f);
   if (!s.titre) return { erreur: "Quel cadeau ?" };
   const { count } = await prisma.souhait.updateMany({ where: { id: souhaitId, participantId: moi.id }, data: s });
   if (!count) return { erreur: "Idée introuvable." };
@@ -462,7 +429,10 @@ export async function basculerReservation(jeton: string, souhaitId: string): Pro
  * public de récupération de pages au nom de notre serveur.
  */
 export async function apercuLien(jeton: string, brut: string): Promise<Apercu | null> {
-  await participantParJeton(jeton);
+  // Un participant, ou le propriétaire d'une liste d'anniversaire.
+  const autorise =
+    (await prisma.participant.count({ where: { jeton } })) + (await prisma.liste.count({ where: { jetonProprio: jeton } }));
+  if (!autorise) return null;
   const lien = await deplierLienCourt(lienSur(brut.slice(0, 1000)));
   if (!lien) return null;
   return apercuDuLien(lien);

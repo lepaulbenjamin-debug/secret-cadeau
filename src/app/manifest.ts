@@ -11,14 +11,15 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#f8f2e7",
-    theme_color: "#1e4d3b",
+    background_color: "#faf6f0",
+    theme_color: "#2b2a66",
     lang: "fr",
     categories: ["lifestyle", "social"],
     icons: [
       { src: "/icone-192.png", sizes: "192x192", type: "image/png" },
       { src: "/icone-512.png", sizes: "512x512", type: "image/png" },
-      { src: "/icone-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      // Android découpe l'icône (cercle, goutte…) : la version « maskable » garde le dessin dans la zone sûre.
+      { src: "/icone-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

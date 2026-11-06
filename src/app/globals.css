@@ -1,34 +1,45 @@
 @import "tailwindcss";
 
 /*
- * Crème, sapin et cerise. Des couleurs de fête sans guirlande clignotante :
- * l'écran doit rester lisible le soir du 24, lumière tamisée.
+ * Les couleurs du logo : corail, bleu marine, une touche de jaune, sur un
+ * fond crème très clair.
+ *
+ * ⚠️ LES NOMS SONT RESTÉS, PAS LES TEINTES. `--sapin` est désormais le bleu
+ * marine (couleur principale), `--cerise` le corail, `--or` le jaune. Renommer
+ * aurait touché chaque écran pour rien ; les noms désignent un RÔLE.
+ *
+ * ⚠️ DEUX CORAILS. Celui du logo (`--corail`, #FC5A53) est trop clair pour du
+ * texte blanc (contraste 3:1) : il sert au décor. Boutons et texte corail
+ * utilisent `--cerise` (#CC3A33), plus profond, lisible (5:1 sur blanc,
+ * 4,6:1 sur le fond crème).
  */
 :root {
-  --creme: #f8f2e7;
-  --carte: #fffdf8;
-  --encre: #2b1f1a;
-  --doux: #6f625a;
-  --trait: #e6dccb;
-  --sapin: #1e4d3b;
-  --sapin-clair: #e3eee8;
-  --cerise: #b7322c;
-  --cerise-clair: #f8e4e1;
-  --or: #b8892b;
+  --creme: #faf6f0;
+  --carte: #ffffff;
+  --encre: #232246;
+  --doux: #66627a;
+  --trait: #e7e1d6;
+  --sapin: #2b2a66;
+  --sapin-clair: #e9e9f4;
+  --cerise: #cc3a33;
+  --cerise-clair: #fde8e6;
+  --corail: #fc5a53;
+  --or: #f9bb4b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --creme: #17130f;
-    --carte: #221c17;
-    --encre: #f3ebdf;
-    --doux: #b3a596;
-    --trait: #3a3028;
-    --sapin: #6fbf98;
-    --sapin-clair: #1f3329;
-    --cerise: #ef7a70;
-    --cerise-clair: #3b201d;
-    --or: #e0b558;
+    --creme: #14132a;
+    --carte: #1e1d3a;
+    --encre: #f1eef8;
+    --doux: #a9a6c2;
+    --trait: #34325a;
+    --sapin: #a9a8f0;
+    --sapin-clair: #2a2952;
+    --cerise: #ff7b74;
+    --cerise-clair: #3a1f2a;
+    --corail: #fc5a53;
+    --or: #f9bb4b;
   }
 }
 
@@ -43,6 +54,7 @@
   --color-cerise: var(--cerise);
   --color-cerise-clair: var(--cerise-clair);
   --color-or: var(--or);
+  --color-corail: var(--corail);
   --font-sans: "Inter Variable", system-ui, sans-serif;
   --font-titre: "Fraunces Variable", Georgia, serif;
 }

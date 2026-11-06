@@ -114,16 +114,17 @@ export function contenuRappel(
     `Ne plus recevoir ces rappels : ${reglages}`,
   ].join("\n");
 
-  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f8f2e7;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#2b1f1a">
+  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#faf6f0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#232246">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="100%" style="max-width:520px;background:#fffdf8;border:1px solid #e6dccb;border-radius:20px" cellpadding="0" cellspacing="0"><tr><td style="padding:28px 24px">
-<p style="margin:0 0 4px;font-size:14px;color:#b7322c;font-weight:600">🎁 Qui Offre · ${echapper(g.nom)}</p>
+<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border:1px solid #e7e1d6;border-radius:20px" cellpadding="0" cellspacing="0"><tr><td style="padding:28px 24px">
+<img src="${echapper(site)}/logo-clair.png" alt="Qui Offre" width="99" height="44" style="display:block;margin:0 0 16px;border:0">
+<p style="margin:0 0 4px;font-size:14px;color:#cc3a33;font-weight:600">${echapper(g.nom)}</p>
 <h1 style="margin:0 0 16px;font-size:24px;font-family:Georgia,serif">Bonjour ${echapper(p.prenom)} !</h1>
 ${lignes.map((l) => `<p style="margin:0 0 12px;font-size:16px;line-height:1.5">${echapper(l)}</p>`).join("\n")}
-<p style="margin:24px 0"><a href="${echapper(lien)}" style="display:inline-block;background:#1e4d3b;color:#fffdf8;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:999px">Ouvrir mon espace</a></p>
-<p style="margin:0;font-size:13px;color:#6f625a">Ce lien est personnel : ne le transférez pas, il dévoilerait votre tirage.</p>
+<p style="margin:24px 0"><a href="${echapper(lien)}" style="display:inline-block;background:#2b2a66;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:999px">Ouvrir mon espace</a></p>
+<p style="margin:0;font-size:13px;color:#66627a">Ce lien est personnel : ne le transférez pas, il dévoilerait votre tirage.</p>
 </td></tr></table>
-<p style="font-size:12px;color:#6f625a;margin:16px 0 0">Vous recevez ce message car vous participez à « ${echapper(g.nom)} ». <a href="${echapper(reglages)}" style="color:#6f625a">Ne plus recevoir de rappels</a></p>
+<p style="font-size:12px;color:#66627a;margin:16px 0 0">Vous recevez ce message car vous participez à « ${echapper(g.nom)} ». <a href="${echapper(reglages)}" style="color:#66627a">Ne plus recevoir de rappels</a></p>
 </td></tr></table></body></html>`;
 
   return { sujet: sujets[type], html, texte, desabonnement };

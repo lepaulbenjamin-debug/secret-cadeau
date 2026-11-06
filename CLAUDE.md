@@ -34,4 +34,5 @@ Voir `README.md` et `DEPLOIEMENT.md`.
 
 - **Fusionner systématiquement** (consigne du propriétaire) : une fois les vérifications passées,
   pousser la branche, ouvrir la pull request vers `main` et la fusionner, puis vérifier que la
-  nouvelle version répond sur quioffre.vercel.app.
+  nouvelle version répond sur https://www.quioffre.fr (quioffre.vercel.app y redirige en 308 :
+  vérifier l'adresse finale, pas le code de la première réponse).

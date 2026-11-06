@@ -4,9 +4,21 @@ import { revalidatePath } from "next/cache";
 
 import type { Etat } from "@/app/actions";
 import { boutiqueAmazon, deplierLienCourt } from "@/lib/affiliation";
-import { apercuDuLien, extraireApercu, recupererPage } from "@/lib/apercu";
+import { apercuDuLien, extraireApercu, recupererPage, suivreRedirections } from "@/lib/apercu";
 import { domaine, lienSur } from "@/lib/format";
-import { extraireListe, lienSeul, lireLignes, MAX_IMPORT, type IdeeImportee } from "@/lib/import-liste";
+import {
+  cadresListy,
+  estListy,
+  extraireListe,
+  extraireListy,
+  lienMarchand,
+  lienSeul,
+  lireLignes,
+  MAX_IMPORT,
+  pagePrivee,
+  pageProduit,
+  type IdeeImportee,
+} from "@/lib/import-liste";
 import { prisma } from "@/lib/prisma";
 import { entierPositif, imageSure } from "@/lib/saisie";
 
@@ -62,6 +74,31 @@ export async function previsualiserImport(jeton: string, texteBrut: string): Pro
         note: `Impossible de lire la page de ${domaine(lien) || "ce site"} (privée, ou le site refuse les robots). Enregistrez-la comme « Ma liste ailleurs », ou collez vos idées une par ligne.`,
       };
     }
+    if (pagePrivee(page.html, page.url)) {
+      const site = estListy(page.url) ? "Listy" : domaine(lien) || "ce site";
+      return {
+        idees: [],
+        lienListe: lien,
+        note: `Cette liste ${site} est privée : seules les personnes invitées peuvent la voir, Qui Offre non plus. Rendez-la publique sur ${site} puis réessayez, ou collez vos idées une par ligne.`,
+      };
+    }
+
+    // Listy : une lecture dédiée, puis le vrai lien de la boutique, pris sur la page de chaque idée.
+    if (estListy(page.url)) {
+      const idees = extraireListy(page.html, page.url);
+      // Les idées déjà réservées sont chargées à part par Listy : on les ajoute.
+      for (const cadre of cadresListy(page.html, page.url)) {
+        const p = await recupererPage(cadre, { jusquALaFin: true });
+        if (!p || "amazon" in p) continue;
+        for (const i of extraireListy(p.html, p.url)) if (!idees.some((x) => x.lien === i.lien)) idees.push(i);
+      }
+      idees.splice(MAX_IMPORT);
+      if (idees.length) {
+        await liensMarchands(idees);
+        return { idees, lienListe: lien };
+      }
+    }
+
     const { idees, methode } = extraireListe(page.html, page.url);
     if (idees.length) {
       return {
@@ -70,9 +107,10 @@ export async function previsualiserImport(jeton: string, texteBrut: string): Pro
         note: methode === "liens" ? "Lu à partir des liens de la page : vérifiez les titres avant d'importer." : undefined,
       };
     }
-    // Pas une liste : peut-être la page d'un seul produit.
+    // Pas une liste : peut-être la page d'un seul produit. Seulement si la page le dit
+    // (sinon on proposerait d'importer… le titre de la liste).
     const a = extraireApercu(page.html, page.url);
-    if (a.titre) return { idees: [{ titre: a.titre, lien, image: a.image, prix: a.prix }] };
+    if (a.titre && (a.prix != null || pageProduit(page.html))) return { idees: [{ titre: a.titre, lien, image: a.image, prix: a.prix }] };
     return {
       idees: [],
       lienListe: lien,
@@ -139,4 +177,27 @@ export async function enregistrerListeExterne(jeton: string, brut: string): Prom
   else await prisma.liste.update({ where: { id: p.id }, data: { listeExterne: lien } });
   revalidatePath("/", "layout");
   return { ok: lien ? "Lien enregistré : il est visible des autres." : "Lien retiré." };
+}
+
+/**
+ * Remplace le lien de chaque idée (sa page sur le site de listes) par celui de la
+ * boutique, lu sur cette page : c'est lui que les proches veulent ouvrir, et c'est
+ * sur lui que s'applique notre identifiant Amazon. Huit pages à la fois ; une page
+ * illisible garde son lien d'origine.
+ */
+async function liensMarchands(idees: IdeeImportee[]) {
+  for (let i = 0; i < idees.length; i += 8) {
+    await Promise.all(
+      idees.slice(i, i + 8).map(async (idee) => {
+        const page = await recupererPage(idee.lien, { jusquALaFin: true });
+        if (!page || "amazon" in page) return;
+        const marchand = lienMarchand(page.html, page.url);
+        if (!marchand) return;
+        // Un lien interne (« /envies/…/redirection ») : on suit la redirection jusqu'à la boutique.
+        const memeSite = new URL(marchand).hostname === new URL(page.url).hostname;
+        const final = memeSite ? await suivreRedirections(marchand) : marchand;
+        if (final) idee.lien = await deplierLienCourt(lienSur(final));
+      }),
+    );
+  }
 }

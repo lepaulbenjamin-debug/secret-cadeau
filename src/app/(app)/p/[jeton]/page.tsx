@@ -26,6 +26,13 @@ import { assurerNomsDeCode, nomVisible, participantOu404 } from "@/lib/acces";
 import { compteARebours, dateLongue } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
+/**
+ * L'import d'une liste (actions-import.ts) lit une page par idée pour trouver le
+ * lien de la boutique : une vingtaine de secondes pour une liste de 20 idées.
+ * Les actions serveur héritent de la durée maximale de la page qui les appelle.
+ */
+export const maxDuration = 60;
+
 export const metadata: Metadata = { title: "Mon espace", robots: { index: false, follow: false } };
 
 const champsSouhait = { id: true, titre: true, lien: true, image: true, prix: true, note: true, reserveParId: true } as const;

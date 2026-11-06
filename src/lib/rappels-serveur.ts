@@ -3,7 +3,7 @@ import "server-only";
 import { envoyerEmail } from "./email";
 import { contenuBienvenue, contenuRelanceOrganisateur, relanceOrganisateurDue } from "./emails-organisateur";
 import { prisma } from "./prisma";
-import { contenuRappel, rappelDu, type TypeRappel } from "./rappels";
+import { contenuAjustement, contenuRappel, rappelDu, type TypeRappel } from "./rappels";
 import { SITE_URL } from "./site";
 
 export type Bilan = { envoyes: number; echecs: number; ignores: number; motifs: string[] };
@@ -127,4 +127,26 @@ export async function envoyerBienvenueOrganisateur(groupeId: string, { prenom, j
   );
   if (!r.ok) await prisma.groupe.update({ where: { id: g.id }, data: { bienvenueEnvoyeeLe: null } });
   return r;
+}
+
+/** Prévient par e-mail les participants dont le tirage vient d'être ajusté (désistement). */
+export async function envoyerAjustements(participantIds: string[]): Promise<Bilan> {
+  const bilan: Bilan = { envoyes: 0, echecs: 0, ignores: 0, motifs: [] };
+  if (!process.env.RESEND_API_KEY) return { ...bilan, motifs: ["RESEND_API_KEY absente"] };
+  const personnes = await prisma.participant.findMany({
+    where: { id: { in: participantIds }, email: { not: "" }, rappelsEmail: true },
+    include: { groupe: { select: { nom: true, nomsDeCode: true } } },
+  });
+  for (const p of personnes) {
+    const r = await envoyerEmail({ a: p.email, ...contenuAjustement(p.groupe, p, { site: SITE_URL }) }).catch(
+      (e: Error) => ({ ok: false, motif: e.message }),
+    );
+    if (r.ok) bilan.envoyes++;
+    else {
+      bilan.echecs++;
+      if (r.motif) bilan.motifs.push(r.motif);
+    }
+  }
+  bilan.ignores = participantIds.length - personnes.length;
+  return bilan;
 }

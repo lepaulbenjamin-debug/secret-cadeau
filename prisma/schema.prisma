@@ -58,6 +58,8 @@ model Participant {
   destinataireId String?      @unique
   destinataire   Participant? @relation("Tirage", fields: [destinataireId], references: [id], onDelete: SetNull)
   offrePar       Participant? @relation("Tirage")
+  /// Le tirage de cette personne a été ajusté après un désistement (elle offre à quelqu'un d'autre).
+  tirageAjusteLe DateTime?
   /// Première ouverture de son lien : l'organisateur sait qui l'a reçu.
   ouvertLe  DateTime?
   creeLe    DateTime  @default(now())

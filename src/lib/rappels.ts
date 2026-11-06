@@ -163,3 +163,32 @@ ${o.avertissement ? `<p style="margin:12px 0 0;font-size:13px;color:#66627a">${e
 
   return { html, texte };
 }
+
+/**
+ * Le tirage de cette personne a été ajusté après un désistement : elle offre
+ * désormais à quelqu'un d'autre. Comme les autres e-mails, sans aucun nom.
+ */
+export function contenuAjustement(g: { nom: string; nomsDeCode: boolean }, p: { prenom: string; jeton: string }, { site }: { site: string }) {
+  const lien = `${site}/p/${p.jeton}`;
+  const { html, texte } = gabaritEmail({
+    site,
+    groupe: g.nom,
+    bonjour: p.prenom,
+    lignes: [
+      "Un participant s'est désisté, et le tirage a été ajusté : la personne à qui vous offrez a changé.",
+      g.nomsDeCode
+        ? "Ouvrez votre espace pour découvrir votre nouveau nom de code et sa liste d'envies."
+        : "Ouvrez votre espace pour la découvrir, avec sa liste d'envies. Si vous aviez déjà acheté un cadeau, gardez-le pour une autre occasion… ou demandez conseil à l'organisateur !",
+    ],
+    boutons: [{ lien, libelle: "Découvrir à qui j'offre", texte: "Votre espace" }],
+    avertissement: "Ce lien est personnel : ne le transférez pas, il dévoilerait votre tirage.",
+    raison: `vous participez à « ${g.nom} »`,
+    reglages: `${lien}#rappels`,
+  });
+  return {
+    sujet: `🔄 ${g.nom} : votre tirage a changé`,
+    html,
+    texte,
+    desabonnement: `${site}/api/desabonner?j=${encodeURIComponent(p.jeton)}`,
+  };
+}

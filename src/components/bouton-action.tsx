@@ -10,7 +10,8 @@ export function BoutonAction({
   className = "bouton bouton-discret",
   titre,
 }: {
-  action: () => Promise<void>;
+  /** Rien si tout va bien, `{ erreur }` pour un refus (voir `Refus` dans actions.ts). */
+  action: () => Promise<{ erreur: string } | void>;
   confirmation?: string;
   children: React.ReactNode;
   className?: string;
@@ -28,9 +29,10 @@ export function BoutonAction({
         if (confirmation && !confirm(confirmation)) return;
         demarrer(async () => {
           try {
-            await action();
-          } catch (e) {
-            alert((e as Error).message || "Ça n'a pas marché, réessayez.");
+            const r = await action();
+            if (r && "erreur" in r) alert(r.erreur);
+          } catch {
+            alert("Ça n'a pas marché. Vérifiez votre connexion et réessayez.");
           }
         });
       }}

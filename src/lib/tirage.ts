@@ -64,3 +64,56 @@ export function tirer(
 
   return placer(0) ? resultat : null;
 }
+
+/**
+ * Quelqu'un se désiste après le tirage : on ajuste le moins possible.
+ *
+ * A offrait à X, X offrait à B. Une fois X retiré, A n'a plus personne et B
+ * n'a plus de Père Noël.
+ *  1. Le plus simple : A offre désormais à B. Une seule personne change.
+ *  2. Si c'est impossible (A = B, ou A et B s'excluent), on raccroche ailleurs
+ *     dans la chaîne : une flèche C → D devient C → B, et A offre à D.
+ *     Deux personnes changent.
+ *  3. Sinon : `null`, et il faut refaire le tirage en entier.
+ *
+ * @returns la nouvelle table (sans X) et les donneurs dont le destinataire a changé.
+ */
+export function retirerDuTirage(
+  table: ReadonlyMap<string, string>,
+  x: string,
+  exclusions: readonly Paire[] = [],
+  alea: () => number = Math.random,
+): { table: Map<string, string>; changes: string[] } | null {
+  if (!table.has(x)) return null;
+  const interdit = new Set<string>();
+  for (const { a, b } of exclusions) {
+    if (a === x || b === x) continue;
+    interdit.add(`${a}>${b}`);
+    interdit.add(`${b}>${a}`);
+  }
+  const possible = (de: string, pour: string) => de !== pour && !interdit.has(`${de}>${pour}`);
+
+  const b = table.get(x)!;
+  const a = [...table].find(([, pour]) => pour === x)?.[0];
+  if (!a) return null;
+
+  const reste = new Map([...table].filter(([de]) => de !== x));
+  if (reste.size < 3) return null;
+
+  if (possible(a, b)) {
+    reste.set(a, b);
+    return { table: reste, changes: [a] };
+  }
+
+  const candidats = melanger(
+    [...reste].filter(([c, d]) => c !== a && d !== b && c !== b && possible(c, b) && possible(a, d)),
+    alea,
+  );
+  // `reste` contient encore A → X : on ne peut pas raccrocher sur cette flèche-là.
+  const choix = candidats.find(([, d]) => d !== x);
+  if (!choix) return null;
+  const [c, d] = choix;
+  reste.set(c, b);
+  reste.set(a, d);
+  return { table: reste, changes: [a, c] };
+}

@@ -7,7 +7,7 @@ export function AjoutExclusion({
   action,
 }: {
   participants: { id: string; prenom: string }[];
-  action: (a: string, b: string) => Promise<void>;
+  action: (a: string, b: string) => Promise<{ erreur: string } | void>;
 }) {
   const [a, setA] = useState("");
   const [b, setB] = useState("");
@@ -31,11 +31,12 @@ export function AjoutExclusion({
         onClick={() =>
           demarrer(async () => {
             try {
-              await action(a, b);
+              const r = await action(a, b);
+              if (r && "erreur" in r) return alert(r.erreur);
               setA("");
               setB("");
-            } catch (e) {
-              alert((e as Error).message);
+            } catch {
+              alert("Ça n'a pas marché. Vérifiez votre connexion et réessayez.");
             }
           })
         }

@@ -102,26 +102,10 @@ l'application marche, simplement sans e-mail.
 
 Ouvrez le site dans Safari ou Chrome → **Partager → Sur l'écran d'accueil**.
 
-## 8. Plus tard : les stores (Capacitor)
+## 8. Les stores
 
-Sur le Mac :
-
-```bash
-npx cap add ios && npx cap add android
-```
-
-```bash
-npx cap sync
-```
-
-```bash
-npx cap open ios        # Xcode → Archive → App Store Connect
-```
-
-```bash
-npx cap open android    # Android Studio → Build → Generate Signed Bundle
-```
-
-Icônes : `public/icone-1024.png` pour les stores (fond plein, les stores arrondissent eux-mêmes) ; `public/icone-maskable-512.png` pour Android ; `src/app/icon.png` et `apple-icon.png` pour le navigateur et l'iPhone. Logo : `public/logo-clair.png`, `logo-sombre.png` (thème sombre), `logo-grand.png`.
+Le Play Store : tout est dans [PLAY-STORE.md](PLAY-STORE.md) (clé, bundle construit par
+GitHub Actions, fiche, déclarations, recette). L'App Store viendra ensuite, sur le
+même modèle que Petsitia.
 
 ⚠️ L'identifiant `fr.quioffre.app` (dans `capacitor.config.ts`) ne doit plus changer après la première publication.

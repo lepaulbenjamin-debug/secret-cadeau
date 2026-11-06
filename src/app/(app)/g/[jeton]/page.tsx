@@ -16,6 +16,7 @@ import {
 import { AjoutExclusion } from "@/components/ajout-exclusion";
 import { BoutonAction } from "@/components/bouton-action";
 import { CopierLien } from "@/components/copier-lien";
+import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Formulaire } from "@/components/formulaire";
 import { Partager } from "@/components/partager";
 import { SeSouvenir } from "@/components/se-souvenir";
@@ -94,6 +95,11 @@ export default async function Organisation({
             Cette page est <strong>votre lien d&apos;organisateur</strong>. Il est gardé sur cet appareil ; copiez-le aussi
             quelque part pour pouvoir y revenir d&apos;un autre téléphone.
           </p>
+          {groupe.emailOrganisateur && (
+            <p className="mt-2 text-sm">
+              📩 Il vient aussi de vous être envoyé à <strong>{groupe.emailOrganisateur}</strong>.
+            </p>
+          )}
           <div className="mt-3"><CopierLien chemin={`/g/${jeton}`} libelle="Copier mon lien d'organisateur" /></div>
         </div>
       )}
@@ -273,8 +279,9 @@ export default async function Organisation({
       )}
 
       {/* Réglages */}
-      <details className="carte">
+      <details id="reglages" className="carte">
         <summary className="cursor-pointer font-titre text-xl font-semibold">Modifier le groupe</summary>
+        <OuvrirSiAncre id="reglages" />
         <div className="mt-4">
           <Formulaire action={modifierGroupe.bind(null, jeton)} bouton="Enregistrer">
             <div>
@@ -290,6 +297,22 @@ export default async function Organisation({
                 <label className="etiquette" htmlFor="budget">Budget (€)</label>
                 <input id="budget" name="budget" inputMode="numeric" className="champ" defaultValue={groupe.budget ?? ""} />
               </div>
+            </div>
+            <div>
+              <label className="etiquette" htmlFor="emailOrganisateur">Votre e-mail d&apos;organisateur</label>
+              <input
+                id="emailOrganisateur"
+                name="emailOrganisateur"
+                type="email"
+                className="champ"
+                defaultValue={groupe.emailOrganisateur}
+                maxLength={120}
+                autoComplete="email"
+              />
+              <label className="mt-2 flex items-center gap-2 text-sm">
+                <input type="checkbox" name="rappelsOrganisateur" defaultChecked={groupe.rappelsOrganisateur} className="size-4 accent-[var(--sapin)]" />
+                Me relancer si le tirage n&apos;est pas fait une semaine avant l&apos;échange
+              </label>
             </div>
             <label className="flex items-start gap-2 text-sm">
               <input type="checkbox" name="nomsDeCode" defaultChecked={groupe.nomsDeCode} className="mt-0.5 size-4 accent-[var(--sapin)]" />

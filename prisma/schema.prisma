@@ -25,6 +25,12 @@ model Groupe {
   /// Mot de l'organisateur, affiché à tous.
   message      String    @default("")
   jetonAdmin   String    @unique
+  /// E-mail de l'organisateur (facultatif) : son lien d'organisateur lui est envoyé,
+  /// et il est relancé si l'échange approche sans tirage.
+  emailOrganisateur   String    @default("")
+  rappelsOrganisateur Boolean   @default(true)
+  bienvenueEnvoyeeLe  DateTime?
+  relanceTirageLe     DateTime?
   /// Lien d'invitation : chacun s'inscrit lui-même. Régénéré pour couper les inscriptions.
   jetonInvitation String? @unique
   tirageLe     DateTime?

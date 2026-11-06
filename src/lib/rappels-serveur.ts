@@ -165,3 +165,38 @@ export async function envoyerBienvenueListe(listeId: string) {
   if (!r.ok) await prisma.liste.update({ where: { id: l.id }, data: { bienvenueEnvoyeeLe: null } });
   return r;
 }
+
+const ATTENTE_RETROUVER_MS = 10 * 60 * 1000;
+
+/**
+ * « Retrouver mes liens » : envoie à cette adresse tous les liens qui lui sont
+ * associés (participant, organisateur, listes). Ne dit jamais à l'appelant si
+ * l'adresse est connue. Un envoi par adresse toutes les 10 minutes au plus.
+ */
+export async function envoyerLiensRetrouves(email: string, maintenant = new Date()): Promise<{ envoye: boolean; motif: string }> {
+  const { aDesLiens, contenuRetrouver } = await import("./emails-retrouver");
+  const precedent = await prisma.envoiLiens.findUnique({ where: { email } });
+  if (precedent && maintenant.getTime() - precedent.dernierEnvoi.getTime() < ATTENTE_RETROUVER_MS) return { envoye: false, motif: "trop tôt" };
+
+  const [participations, organisations, listes] = await Promise.all([
+    prisma.participant.findMany({ where: { email }, select: { prenom: true, jeton: true, groupe: { select: { nom: true } } }, orderBy: { creeLe: "desc" }, take: 30 }),
+    prisma.groupe.findMany({ where: { emailOrganisateur: email }, select: { nom: true, jetonAdmin: true }, orderBy: { creeLe: "desc" }, take: 30 }),
+    prisma.liste.findMany({ where: { emailProprio: email }, select: { prenom: true, occasion: true, jetonProprio: true, jetonPartage: true }, orderBy: { creeLe: "desc" }, take: 30 }),
+  ]);
+  const liens = {
+    participations: participations.map((p) => ({ groupe: p.groupe.nom, prenom: p.prenom, jeton: p.jeton })),
+    organisations: organisations.map((g) => ({ groupe: g.nom, jetonAdmin: g.jetonAdmin })),
+    listes,
+  };
+  if (!aDesLiens(liens)) return { envoye: false, motif: "adresse inconnue" };
+  if (!process.env.RESEND_API_KEY) return { envoye: false, motif: "RESEND_API_KEY absente" };
+
+  // Noté avant l'envoi : deux demandes simultanées n'envoient pas deux e-mails.
+  await prisma.envoiLiens.upsert({ where: { email }, create: { email, dernierEnvoi: maintenant }, update: { dernierEnvoi: maintenant } });
+  const r = await envoyerEmail({ a: email, ...contenuRetrouver(liens, { site: SITE_URL }) }).catch((e: Error) => ({ ok: false, motif: e.message }));
+  if (!r.ok) {
+    await prisma.envoiLiens.delete({ where: { email } }).catch(() => {});
+    return { envoye: false, motif: r.motif ?? "échec" };
+  }
+  return { envoye: true, motif: "envoyé" };
+}

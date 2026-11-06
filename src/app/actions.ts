@@ -11,7 +11,7 @@ import { nouveauJeton } from "@/lib/jeton";
 import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
 import { prisma } from "@/lib/prisma";
 import { dateOuNull, emailFacultatif, entierPositif, lireIdee, texte } from "@/lib/saisie";
-import { envoyerAjustements, envoyerBienvenueOrganisateur, envoyerRappels } from "@/lib/rappels-serveur";
+import { envoyerAjustements, envoyerBienvenueOrganisateur, envoyerLiensRetrouves, envoyerRappels } from "@/lib/rappels-serveur";
 import { retirerDuTirage, tirer } from "@/lib/tirage";
 
 export type Etat = { erreur?: string; ok?: string } | null;
@@ -459,4 +459,20 @@ export async function repondreQuestion(jeton: string, questionId: string, _: Eta
   if (!count) return { erreur: "Question introuvable." };
   revalidatePath("/", "layout");
   return { ok: "Réponse envoyée." };
+}
+
+/* ───────────────────────────── Retrouver ses liens ───────────────────────────── */
+
+/**
+ * ⚠️ LA MÊME RÉPONSE QUE L'ADRESSE SOIT CONNUE OU NON : sinon n'importe qui
+ * pourrait vérifier si telle personne fait partie de tel groupe.
+ */
+export async function retrouverLiens(_: Etat, f: FormData): Promise<Etat> {
+  const email = emailFacultatif(f, "email");
+  if (!email) return { erreur: "Indiquez une adresse e-mail valide." };
+  const r = await envoyerLiensRetrouves(email);
+  console.log("Retrouver mes liens :", r.motif);
+  return {
+    ok: "Si cette adresse est associée à un groupe ou à une liste, un e-mail avec vos liens vient de partir. Pensez à regarder dans les indésirables.",
+  };
 }

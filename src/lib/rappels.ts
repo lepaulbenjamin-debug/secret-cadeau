@@ -140,6 +140,7 @@ export function gabaritEmail(o: {
     "",
     "—",
     "Qui Offre",
+    `Vous recevez ce message car ${o.raison}.`,
     `Ne plus recevoir ces e-mails : ${o.reglages}`,
   ].join("\n");
 

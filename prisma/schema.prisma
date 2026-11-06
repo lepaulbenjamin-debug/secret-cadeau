@@ -175,3 +175,10 @@ model IdeeListe {
 
   @@index([listeId])
 }
+
+/// Dernier envoi de « retrouver mes liens » par adresse : un seul toutes les
+/// 10 minutes, pour qu'on ne puisse pas inonder la boîte de quelqu'un.
+model EnvoiLiens {
+  email        String   @id
+  dernierEnvoi DateTime
+}

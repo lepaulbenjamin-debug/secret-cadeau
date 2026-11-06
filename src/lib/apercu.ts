@@ -21,13 +21,21 @@ const VIDE: Apercu = { titre: "", image: "", prix: null };
 
 /* ───────────────────────── Lecture du HTML ───────────────────────── */
 
-const ENTITES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", euro: "€" };
+const ENTITES: Record<string, string> = {
+  amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", euro: "€",
+  // Les accents et la typographie du français, fréquents dans les titres de produits.
+  eacute: "é", egrave: "è", ecirc: "ê", euml: "ë", agrave: "à", acirc: "â", auml: "ä", ccedil: "ç",
+  icirc: "î", iuml: "ï", ocirc: "ô", ouml: "ö", ugrave: "ù", ucirc: "û", uuml: "ü", oelig: "œ", aelig: "æ",
+  Eacute: "É", Egrave: "È", Ecirc: "Ê", Agrave: "À", Acirc: "Â", Ccedil: "Ç", Ocirc: "Ô", OElig: "Œ",
+  rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "“", laquo: "«", raquo: "»", hellip: "…", ndash: "–", mdash: "—",
+  deg: "°", times: "×", reg: "®", copy: "©", trade: "™",
+};
 
 export function decoder(s: string): string {
   return s
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(Number.parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
-    .replace(/&([a-z]+);/gi, (m, n) => ENTITES[n.toLowerCase()] ?? m)
+    .replace(/&([a-z]+);/gi, (m, n) => ENTITES[n] ?? ENTITES[n.toLowerCase()] ?? m)
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -221,7 +229,7 @@ async function adressePublique(lien: string, resoudre: Resolveur): Promise<boole
 
 const TAILLE_MAX = 1_500_000;
 
-async function lireDebut(r: Response): Promise<string> {
+async function lireCorps(r: Response, jusquALaFin: boolean): Promise<string> {
   if (!r.body) return "";
   const lecteur = r.body.getReader();
   const morceaux: Uint8Array[] = [];
@@ -231,29 +239,32 @@ async function lireDebut(r: Response): Promise<string> {
     if (done) break;
     morceaux.push(value);
     total += value.length;
-    // Les métadonnées sont dans <head> : inutile de lire la suite.
-    if (new TextDecoder().decode(value).includes("</head>")) break;
+    // Pour un aperçu, les métadonnées sont dans <head> : inutile de lire la suite.
+    if (!jusquALaFin && new TextDecoder().decode(value).includes("</head>")) break;
   }
   await lecteur.cancel().catch(() => {});
   return new TextDecoder().decode(Buffer.concat(morceaux));
 }
 
-export async function apercuDuLien(
+export type Recuperation = { html: string; url: string } | { amazon: string } | null;
+
+/**
+ * Va chercher une page, en suivant les redirections, avec les garde-fous :
+ * jamais d'adresse interne, jamais Amazon (on renvoie alors `{ amazon }` avec
+ * l'adresse atteinte). `null` si la page est introuvable, refusée ou pas du HTML.
+ */
+export async function recupererPage(
   lien: string,
-  { fetcher = fetch, resoudre = resolveurParDefaut }: { fetcher?: typeof fetch; resoudre?: Resolveur } = {},
-): Promise<Apercu> {
-  const deLAdresse = { ...VIDE, titre: titreDepuisAdresse(lien) };
-
-  // Amazon : jamais de requête (voir en tête de fichier).
-  if (boutiqueAmazon(lien)) return deLAdresse;
-
+  { fetcher = fetch, resoudre = resolveurParDefaut, jusquALaFin = false }: { fetcher?: typeof fetch; resoudre?: Resolveur; jusquALaFin?: boolean } = {},
+): Promise<Recuperation> {
+  if (boutiqueAmazon(lien)) return { amazon: lien };
   let courant = lien;
   try {
     for (let saut = 0; saut < 5; saut++) {
-      if (!(await adressePublique(courant, resoudre))) return deLAdresse;
+      if (!(await adressePublique(courant, resoudre))) return null;
       const r = await fetcher(courant, {
         redirect: "manual",
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(8000),
         headers: {
           "user-agent": "Mozilla/5.0 (compatible; QuiOffreBot/1.0; +https://www.quioffre.fr)",
           accept: "text/html,application/xhtml+xml",
@@ -263,15 +274,27 @@ export async function apercuDuLien(
       const suivant = r.headers.get("location");
       if (r.status >= 300 && r.status < 400 && suivant) {
         courant = new URL(suivant, courant).toString();
-        if (boutiqueAmazon(courant)) return { ...VIDE, titre: titreDepuisAdresse(courant) || deLAdresse.titre };
+        if (boutiqueAmazon(courant)) return { amazon: courant };
         continue;
       }
-      if (!r.ok || !(r.headers.get("content-type") ?? "").includes("html")) return deLAdresse;
-      const lu = extraireApercu(await lireDebut(r), courant);
-      return { titre: lu.titre || deLAdresse.titre, image: lu.image, prix: lu.prix };
+      if (!r.ok || !(r.headers.get("content-type") ?? "").includes("html")) return null;
+      return { html: await lireCorps(r, jusquALaFin), url: courant };
     }
   } catch {
-    // Site lent, refus, coupure : on garde ce que l'adresse dit.
+    // Site lent, refus, coupure.
   }
-  return deLAdresse;
+  return null;
+}
+
+export async function apercuDuLien(
+  lien: string,
+  options: { fetcher?: typeof fetch; resoudre?: Resolveur } = {},
+): Promise<Apercu> {
+  const deLAdresse = { ...VIDE, titre: titreDepuisAdresse(lien) };
+  const page = await recupererPage(lien, options);
+  // Amazon (jamais lu, voir en tête de fichier) : le titre de l'adresse atteinte.
+  if (page && "amazon" in page) return { ...VIDE, titre: titreDepuisAdresse(page.amazon) || deLAdresse.titre };
+  if (!page) return deLAdresse;
+  const lu = extraireApercu(page.html, page.url);
+  return { titre: lu.titre || deLAdresse.titre, image: lu.image, prix: lu.prix };
 }

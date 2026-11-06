@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { IdeesPartagees } from "@/components/idees-partagees";
+import { LienListeExterne } from "@/components/lien-liste-externe";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { lienAffiche } from "@/lib/affiliation";
 import { compteARebours, dateLongue, domaine } from "@/lib/format";
@@ -54,6 +55,7 @@ export default async function ListePartagee({ params }: { params: Promise<{ jeto
             ? `${liste.prenom} n'a pas encore ajouté d'idée. Revenez bientôt !`
             : `Touchez « Je m'en occupe » sur le cadeau que vous offrez : ${liste.prenom} ne le saura pas, et les autres éviteront le doublon.`}
         </p>
+        <LienListeExterne lien={liste.listeExterne} />
         {idees.length > 0 && <IdeesPartagees jetonPartage={jeton} idees={idees} />}
         {idees.length > 0 && libres === 0 && <p className="mt-3 text-sm font-medium text-sapin">Toutes les idées sont réservées 🎉</p>}
       </section>

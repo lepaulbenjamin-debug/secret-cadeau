@@ -52,6 +52,8 @@ model Participant {
   /// Visibles de l'organisateur seul : pour envoyer les liens et, plus tard, des rappels.
   email     String    @default("")
   telephone String    @default("")
+  /// Lien d'une liste tenue ailleurs (Amazon, autre site), montré aux autres participants.
+  listeExterne String  @default("")
   /// Rappels par e-mail (tirage fait, J-7, veille). Coupés en un clic depuis l'e-mail.
   rappelsEmail Boolean @default(true)
   /// La personne à qui il offre. Fixée par le tirage, connue de lui seul.
@@ -151,6 +153,8 @@ model Liste {
   jetonPartage  String    @unique
   /// Pour lui envoyer ses liens (facultatif). Visible de personne.
   emailProprio  String    @default("")
+  /// Lien d'une liste tenue ailleurs (Amazon, autre site), montré aux proches.
+  listeExterne  String    @default("")
   bienvenueEnvoyeeLe DateTime?
   creeLe        DateTime  @default(now())
 

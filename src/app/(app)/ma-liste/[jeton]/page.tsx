@@ -8,6 +8,7 @@ import { BoutonAction } from "@/components/bouton-action";
 import { ChampsSouhait } from "@/components/champs-souhait";
 import { CopierLien } from "@/components/copier-lien";
 import { Formulaire } from "@/components/formulaire";
+import { ImportListe } from "@/components/import-liste";
 import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Partager } from "@/components/partager";
 import { SeSouvenir } from "@/components/se-souvenir";
@@ -108,6 +109,7 @@ export default async function MaListe({ params, searchParams }: { params: Promis
             <ChampsSouhait id="nouveau" jeton={jeton} />
           </Formulaire>
         </div>
+        <ImportListe jeton={jeton} listeExterne={liste.listeExterne} />
       </section>
 
       <details id="reglages" className="carte">

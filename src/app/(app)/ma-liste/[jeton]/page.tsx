@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ajouterIdeeListe, modifierIdeeListe, modifierListe, supprimerIdeeListe } from "@/app/actions-listes";
+import { viderListe } from "@/app/actions-import";
 import { BoutonAction } from "@/components/bouton-action";
 import { ChampsSouhait } from "@/components/champs-souhait";
 import { CopierLien } from "@/components/copier-lien";
@@ -80,7 +81,18 @@ export default async function MaListe({ params, searchParams }: { params: Promis
       </section>
 
       <section className="carte">
-        <h2 className="font-titre text-xl font-semibold">Mes idées · {liste.idees.length}</h2>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-titre text-xl font-semibold">Mes idées · {liste.idees.length}</h2>
+          {liste.idees.length > 1 && (
+            <BoutonAction
+              action={viderListe.bind(null, jeton)}
+              confirmation={`Retirer les ${liste.idees.length} idées de votre liste ? C'est définitif.`}
+              className="shrink-0 text-sm font-medium text-cerise underline"
+            >
+              Tout retirer
+            </BoutonAction>
+          )}
+        </div>
         {liste.idees.length > 0 && (
           <ul className="mt-2 divide-y divide-trait">
             {liste.idees.map((s) => (

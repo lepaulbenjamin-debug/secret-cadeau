@@ -201,3 +201,15 @@ async function liensMarchands(idees: IdeeImportee[]) {
     );
   }
 }
+
+/**
+ * Vider sa liste d'un coup (après un import raté, ou pour repartir de zéro).
+ * Les réservations faites par d'autres sur ces idées partent avec elles.
+ */
+export async function viderListe(jeton: string): Promise<{ erreur: string } | void> {
+  const p = await proprietaire(jeton);
+  if (!p) return { erreur: "Lien inconnu." };
+  if (p.sorte === "participant") await prisma.souhait.deleteMany({ where: { participantId: p.id } });
+  else await prisma.ideeListe.deleteMany({ where: { listeId: p.id } });
+  revalidatePath("/", "layout");
+}

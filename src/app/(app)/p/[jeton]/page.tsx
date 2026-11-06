@@ -12,6 +12,7 @@ import {
   repondreQuestion,
   supprimerSouhait,
 } from "@/app/actions";
+import { viderListe } from "@/app/actions-import";
 import { BoutonAction } from "@/components/bouton-action";
 import { ChampsSouhait } from "@/components/champs-souhait";
 import { CopierLien } from "@/components/copier-lien";
@@ -221,7 +222,18 @@ export default async function EspacePerso({
 
       {/* Ma liste */}
       <section className="carte">
-        <h2 className="font-titre text-xl font-semibold">Ma liste d&apos;envies</h2>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-titre text-xl font-semibold">Ma liste d&apos;envies</h2>
+          {mesSouhaits.length > 1 && (
+            <BoutonAction
+              action={viderListe.bind(null, jeton)}
+              confirmation={`Retirer les ${mesSouhaits.length} idées de votre liste ? C'est définitif.`}
+              className="shrink-0 text-sm font-medium text-cerise underline"
+            >
+              Tout retirer
+            </BoutonAction>
+          )}
+        </div>
         <p className="mt-1 text-sm text-doux">Tout le groupe la voit. Vous ne saurez jamais ce qui a été réservé : surprise garantie.</p>
         {anonyme && mesSouhaits.length === 0 && (
           <p role="alert" className="mt-3 rounded-xl bg-cerise-clair p-3 text-sm font-medium text-cerise">

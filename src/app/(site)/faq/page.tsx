@@ -77,7 +77,7 @@ const QUESTIONS = [
   },
   {
     q: "Comment supprimer mes données ?",
-    r: "Demandez à l'organisateur de votre groupe de vous retirer : vos données et votre liste sont alors effacées. Vous pouvez aussi demander la suppression d'un groupe ou de vos données en nous écrivant à l'adresse indiquée dans la politique de confidentialité et les mentions légales.",
+    r: "Demandez à l'organisateur de votre groupe de vous retirer : vos données et votre liste sont alors effacées. L'organisateur peut aussi supprimer le groupe entier depuis sa page, ce qui efface tout définitivement. Vous pouvez enfin demander la suppression d'un groupe ou de vos données en nous écrivant à l'adresse indiquée dans la politique de confidentialité et les mentions légales.",
   },
   {
     q: "Pourquoi certains liens Amazon contiennent-ils un identifiant partenaire ?",

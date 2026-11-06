@@ -9,6 +9,8 @@ export type LienGarde = {
   jeton: string;
   groupe: string;
   prenom?: string;
+  /** Espace d'une autre personne, inscrite depuis cet appareil (un enfant, un proche). */
+  pourAutre?: boolean;
   vuLe: number;
 };
 
@@ -25,8 +27,12 @@ export function lireLiens(): LienGarde[] {
 
 export function garderLien(lien: Omit<LienGarde, "vuLe">) {
   try {
-    const autres = lireLiens().filter((l) => !(l.type === lien.type && l.jeton === lien.jeton));
-    localStorage.setItem(CLE, JSON.stringify([{ ...lien, vuLe: Date.now() }, ...autres].slice(0, 30)));
+    const liens = lireLiens();
+    const ancien = liens.find((l) => l.type === lien.type && l.jeton === lien.jeton);
+    const autres = liens.filter((l) => l !== ancien);
+    // Rouvrir l'espace de Léo depuis ce téléphone ne doit pas en faire « votre » espace.
+    const pourAutre = lien.pourAutre ?? ancien?.pourAutre;
+    localStorage.setItem(CLE, JSON.stringify([{ ...lien, pourAutre, vuLe: Date.now() }, ...autres].slice(0, 30)));
   } catch {
     // Navigation privée ou stockage bloqué : la page marche sans.
   }

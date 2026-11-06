@@ -133,6 +133,28 @@ export async function ajouterParticipants(jetonAdmin: string, _: Etat, f: FormDa
   if (groupe.tirageLe) return { erreur: "Le tirage est fait : annulez-le pour ajouter quelqu'un." };
   const existants = await prisma.participant.findMany({ where: { groupeId: groupe.id }, select: { prenom: true, nomDeCode: true } });
   const deja = new Set(existants.map((p) => p.prenom.toLowerCase()));
+
+  // Une personne avec ses coordonnées (formulaire détaillé)…
+  const seul = lirePrenoms(texte(f, "prenom", 40))[0];
+  if (seul) {
+    if (deja.has(seul.toLowerCase())) return { erreur: `Il y a déjà un « ${seul} » : ajoutez l'initiale du nom.` };
+    if (existants.length >= MAX_PARTICIPANTS) return { erreur: `${MAX_PARTICIPANTS} participants au maximum.` };
+    const coordonnees = lireCoordonnees(f);
+    if ("erreur" in coordonnees) return coordonnees;
+    await prisma.participant.create({
+      data: {
+        groupeId: groupe.id,
+        prenom: seul,
+        nomDeCode: nomDeCodeAleatoire(existants.map((p) => p.nomDeCode)),
+        jeton: nouveauJeton(),
+        ...coordonnees,
+      },
+    });
+    revalidatePath(`/g/${jetonAdmin}`);
+    return { ok: `${seul} est ajouté·e.` };
+  }
+
+  // … ou plusieurs prénoms d'un coup.
   const nouveaux = lirePrenoms(String(f.get("prenoms") ?? "")).filter((p) => !deja.has(p.toLowerCase()));
   if (!nouveaux.length) return { erreur: "Aucun nouveau prénom." };
   if (existants.length + nouveaux.length > MAX_PARTICIPANTS) return { erreur: `${MAX_PARTICIPANTS} participants au maximum.` };
@@ -142,6 +164,31 @@ export async function ajouterParticipants(jetonAdmin: string, _: Etat, f: FormDa
   });
   revalidatePath(`/g/${jetonAdmin}`);
   return { ok: nouveaux.length > 1 ? `${nouveaux.length} personnes ajoutées.` : `${nouveaux[0]} est ajouté·e.` };
+}
+
+/**
+ * L'organisateur corrige le prénom ou les coordonnées d'un participant
+ * (ajouté à la main, ou faute de frappe). Si un e-mail apparaît après le
+ * tirage, l'e-mail « le tirage est fait » part aussitôt.
+ */
+export async function modifierParticipant(jetonAdmin: string, participantId: string, _: Etat, f: FormData): Promise<Etat> {
+  const groupe = await groupeParJetonAdmin(jetonAdmin);
+  const p = await prisma.participant.findFirst({ where: { id: participantId, groupeId: groupe.id } });
+  if (!p) return { erreur: "Participant introuvable." };
+  const prenom = lirePrenoms(texte(f, "prenom", 40))[0];
+  if (!prenom) return { erreur: "Le prénom ne peut pas être vide." };
+  if (prenom.toLowerCase() !== p.prenom.toLowerCase()) {
+    const doublon = await prisma.participant.count({ where: { groupeId: groupe.id, prenom: { equals: prenom, mode: "insensitive" } } });
+    if (doublon) return { erreur: `Il y a déjà un « ${prenom} » dans le groupe.` };
+  }
+  const coordonnees = lireCoordonnees(f);
+  if ("erreur" in coordonnees) return coordonnees;
+  await prisma.participant.update({ where: { id: p.id }, data: { prenom, ...coordonnees } });
+  if (groupe.tirageLe && coordonnees.email && coordonnees.email !== p.email) {
+    after(() => envoyerRappels({ groupeId: groupe.id }).then((b) => console.log("Rappels après ajout d'e-mail :", JSON.stringify(b))));
+  }
+  revalidatePath(`/g/${jetonAdmin}`);
+  return { ok: "Enregistré." };
 }
 
 export async function retirerParticipant(jetonAdmin: string, participantId: string): Promise<Refus> {

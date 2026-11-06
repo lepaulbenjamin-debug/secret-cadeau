@@ -1,4 +1,4 @@
-import { CalendarDays, Crown, Eye, EyeOff, Link2, Mail, MessageSquare, Shuffle, Trash2, UserMinus, Wallet, X } from "lucide-react";
+import { CalendarDays, Crown, Eye, EyeOff, Link2, Mail, MessageSquare, Pencil, Shuffle, Trash2, UserMinus, Wallet, X } from "lucide-react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -11,11 +11,13 @@ import {
   desisterApresTirage,
   lancerTirage,
   modifierGroupe,
+  modifierParticipant,
   regenererInvitation,
   retirerParticipant,
 } from "@/app/actions";
 import { AjoutExclusion } from "@/components/ajout-exclusion";
 import { BoutonAction } from "@/components/bouton-action";
+import { ChampsParticipant } from "@/components/champs-participant";
 import { CopierLien } from "@/components/copier-lien";
 import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Formulaire } from "@/components/formulaire";
@@ -193,7 +195,8 @@ export default async function Organisation({
         </p>
         <ul className="mt-4 divide-y divide-trait">
           {groupe.participants.map((p) => (
-            <li key={p.id} className="flex items-center gap-3 py-3">
+            <li key={p.id} className="py-3">
+              <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">
                   {p.prenom}
@@ -245,17 +248,45 @@ export default async function Organisation({
                   <Trash2 size={16} />
                 </BoutonAction>
               )}
+              </div>
+              <details className="mt-1">
+                <summary className="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-sapin">
+                  <Pencil size={12} aria-hidden /> Prénom et coordonnées
+                </summary>
+                <div className="mt-2 rounded-xl bg-creme p-3">
+                  <Formulaire
+                    key={`participant-${p.id}`}
+                    action={modifierParticipant.bind(null, jeton, p.id)}
+                    bouton="Enregistrer"
+                    boutonClass="bouton bouton-discret !min-h-9 w-full text-sm"
+                    className="space-y-2"
+                  >
+                    <ChampsParticipant id={p.id} v={p} />
+                  </Formulaire>
+                </div>
+              </details>
             </li>
           ))}
         </ul>
         {!tire && (
           <details className="mt-3">
-            <summary className="cursor-pointer text-sm font-semibold text-sapin">+ Ajouter des participants</summary>
-            <div className="mt-3">
-              <Formulaire action={ajouterParticipants.bind(null, jeton)} bouton="Ajouter" vider>
-                <textarea name="prenoms" rows={3} className="champ" placeholder="Un prénom par ligne" aria-label="Prénoms à ajouter" />
+            <summary className="cursor-pointer text-sm font-semibold text-sapin">+ Ajouter un participant</summary>
+            <div className="mt-3 rounded-xl bg-creme p-3">
+              <Formulaire key="ajout-un" action={ajouterParticipants.bind(null, jeton)} bouton="Ajouter" vider className="space-y-2">
+                <ChampsParticipant id="nouveau" />
+                <p className="text-xs text-doux">
+                  Avec un e-mail, la personne recevra son lien au moment du tirage, puis les rappels. Visible de vous seul.
+                </p>
               </Formulaire>
             </div>
+            <details className="mt-3">
+              <summary className="cursor-pointer text-xs font-medium text-doux">Ajouter plusieurs prénoms d&apos;un coup</summary>
+              <div className="mt-2">
+                <Formulaire key="ajout-plusieurs" action={ajouterParticipants.bind(null, jeton)} bouton="Ajouter" vider className="space-y-2">
+                  <textarea name="prenoms" rows={3} className="champ" placeholder="Un prénom par ligne" aria-label="Prénoms à ajouter" />
+                </Formulaire>
+              </div>
+            </details>
           </details>
         )}
       </section>

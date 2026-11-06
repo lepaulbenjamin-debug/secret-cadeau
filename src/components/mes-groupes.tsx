@@ -47,7 +47,7 @@ export function MesGroupes() {
             <Link href={l.type === "admin" ? `/g/${l.jeton}` : `/p/${l.jeton}`} className="min-w-0 flex-1">
               <span className="block truncate font-semibold">{l.groupe}</span>
               <span className="block text-sm text-doux">
-                {l.type === "admin" ? "Vous organisez" : `Votre espace${l.prenom ? `, ${l.prenom}` : ""}`}
+                {l.type === "admin" ? "Vous organisez" : l.pourAutre ? `Espace de ${l.prenom}` : `Votre espace${l.prenom ? `, ${l.prenom}` : ""}`}
               </span>
             </Link>
             <button

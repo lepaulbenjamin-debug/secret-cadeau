@@ -10,10 +10,20 @@ import { lienSur, lirePrenoms } from "@/lib/format";
 import { nouveauJeton } from "@/lib/jeton";
 import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
 import { prisma } from "@/lib/prisma";
-import { envoyerBienvenueOrganisateur, envoyerRappels } from "@/lib/rappels-serveur";
-import { tirer } from "@/lib/tirage";
+import { envoyerAjustements, envoyerBienvenueOrganisateur, envoyerRappels } from "@/lib/rappels-serveur";
+import { retirerDuTirage, tirer } from "@/lib/tirage";
 
 export type Etat = { erreur?: string; ok?: string } | null;
+
+/**
+ * Réponse d'une action lancée par un bouton : rien si tout va bien, sinon le
+ * message à montrer.
+ *
+ * ⚠️ JAMAIS `throw` POUR UN REFUS ATTENDU. En production, Next.js masque le
+ * texte des erreurs levées côté serveur : la personne voyait « Minified React
+ * error #441 » au lieu de « Il ne resterait que deux personnes ».
+ */
+export type Refus = { erreur: string } | void;
 
 const texte = (f: FormData, cle: string, max = 200) => String(f.get(cle) ?? "").trim().slice(0, max);
 
@@ -134,20 +144,61 @@ export async function ajouterParticipants(jetonAdmin: string, _: Etat, f: FormDa
   return { ok: nouveaux.length > 1 ? `${nouveaux.length} personnes ajoutées.` : `${nouveaux[0]} est ajouté·e.` };
 }
 
-export async function retirerParticipant(jetonAdmin: string, participantId: string) {
+export async function retirerParticipant(jetonAdmin: string, participantId: string): Promise<Refus> {
   const groupe = await groupeParJetonAdmin(jetonAdmin);
-  if (groupe.tirageLe) throw new Error("Le tirage est fait : annulez-le d'abord.");
+  if (groupe.tirageLe) return { erreur: "Le tirage est fait : annulez-le d'abord." };
   await prisma.participant.deleteMany({ where: { id: participantId, groupeId: groupe.id } });
   revalidatePath(`/g/${jetonAdmin}`);
 }
 
-export async function basculerExclusion(jetonAdmin: string, x: string, y: string) {
+/**
+ * Un participant se désiste APRÈS le tirage. Au lieu de tout refaire, on
+ * ajuste le moins possible (voir `retirerDuTirage`) : une ou deux personnes
+ * changent de destinataire, les autres gardent le leur et leur cadeau.
+ *
+ * Ses idées, ses questions et ses réservations partent avec lui. Les
+ * personnes ajustées perdent les questions qu'elles avaient posées à leur
+ * ancien destinataire, et sont prévenues dans leur espace et par e-mail.
+ * L'organisateur ne sait ni qui, ni à qui : seulement combien.
+ */
+export async function desisterApresTirage(jetonAdmin: string, participantId: string): Promise<Refus> {
   const groupe = await groupeParJetonAdmin(jetonAdmin);
-  if (groupe.tirageLe) throw new Error("Le tirage est fait : annulez-le d'abord.");
+  if (!groupe.tirageLe) return { erreur: "Le tirage n'est pas fait : retirez simplement la personne." };
+  const [participants, exclusions] = await Promise.all([
+    prisma.participant.findMany({ where: { groupeId: groupe.id }, select: { id: true, destinataireId: true } }),
+    prisma.exclusion.findMany({ where: { groupeId: groupe.id }, select: { aId: true, bId: true } }),
+  ]);
+  if (!participants.some((p) => p.id === participantId)) return { erreur: "Participant introuvable." };
+  if (participants.length <= 3) return { erreur: "Il ne resterait que deux personnes : un Secret Santa en demande au moins trois." };
+
+  const table = new Map(participants.filter((p) => p.destinataireId).map((p) => [p.id, p.destinataireId!]));
+  const r = retirerDuTirage(table, participantId, exclusions.map((e) => ({ a: e.aId, b: e.bId })));
+  if (!r) return { erreur: "Impossible d'ajuster le tirage avec ces exclusions : annulez-le et relancez-le." };
+
+  const maintenant = new Date();
+  await prisma.$transaction(async (tx) => {
+    await tx.question.deleteMany({ where: { pereId: { in: r.changes } } });
+    // La suppression libère son destinataire et celui qui lui offrait (SetNull).
+    await tx.participant.delete({ where: { id: participantId } });
+    // Les changements s'appliquent dans l'ordre : chaque destinataire est libre au moment où on l'attribue.
+    for (const de of [...r.changes].reverse()) {
+      await tx.participant.update({ where: { id: de }, data: { destinataireId: null } });
+    }
+    for (const de of [...r.changes].reverse()) {
+      await tx.participant.update({ where: { id: de }, data: { destinataireId: r.table.get(de)!, tirageAjusteLe: maintenant } });
+    }
+  });
+  after(() => envoyerAjustements(r.changes).then((b) => console.log("Ajustement du tirage :", JSON.stringify(b))));
+  revalidatePath(`/g/${jetonAdmin}`);
+}
+
+export async function basculerExclusion(jetonAdmin: string, x: string, y: string): Promise<Refus> {
+  const groupe = await groupeParJetonAdmin(jetonAdmin);
+  if (groupe.tirageLe) return { erreur: "Le tirage est fait : annulez-le d'abord." };
   if (x === y) return;
   const [aId, bId] = [x, y].sort();
   const membres = await prisma.participant.count({ where: { id: { in: [aId, bId] }, groupeId: groupe.id } });
-  if (membres !== 2) throw new Error("Participant inconnu.");
+  if (membres !== 2) return { erreur: "Participant inconnu." };
   const existante = await prisma.exclusion.findUnique({ where: { aId_bId: { aId, bId } } });
   if (existante) await prisma.exclusion.delete({ where: { id: existante.id } });
   else await prisma.exclusion.create({ data: { groupeId: groupe.id, aId, bId } });
@@ -180,7 +231,7 @@ export async function lancerTirage(jetonAdmin: string, _etat: Etat, f: FormData)
 
   await prisma.$transaction([
     // Libérer d'abord : `destinataireId` est unique, une écriture croisée échouerait sinon.
-    prisma.participant.updateMany({ where: { groupeId: groupe.id }, data: { destinataireId: null } }),
+    prisma.participant.updateMany({ where: { groupeId: groupe.id }, data: { destinataireId: null, tirageAjusteLe: null } }),
     ...[...resultat].map(([de, pour]) => prisma.participant.update({ where: { id: de }, data: { destinataireId: pour } })),
     prisma.groupe.update({ where: { id: groupe.id }, data: { tirageLe: new Date() } }),
   ]);
@@ -197,7 +248,7 @@ export async function annulerTirage(jetonAdmin: string) {
     prisma.question.deleteMany({ where: { pere: { groupeId: groupe.id } } }),
     // Un nouveau tirage mérite un nouvel e-mail « le tirage est fait ».
     prisma.rappel.deleteMany({ where: { type: "tirage", participant: { groupeId: groupe.id } } }),
-    prisma.participant.updateMany({ where: { groupeId: groupe.id }, data: { destinataireId: null } }),
+    prisma.participant.updateMany({ where: { groupeId: groupe.id }, data: { destinataireId: null, tirageAjusteLe: null } }),
     prisma.groupe.update({ where: { id: groupe.id }, data: { tirageLe: null } }),
   ]);
   revalidatePath("/", "layout");
@@ -276,10 +327,10 @@ export async function rejoindreGroupe(jetonInvitation: string, _: unknown, f: Fo
 }
 
 /** « Tirer un autre nom de code » : un nouveau, toujours unique dans le groupe. */
-export async function changerNomDeCode(jeton: string) {
+export async function changerNomDeCode(jeton: string): Promise<Refus> {
   const moi = await participantParJeton(jeton);
   // Après le tirage, le nom de code est écrit sur le paquet : il ne bouge plus.
-  if (moi.groupe.tirageLe) throw new Error("Le tirage est fait : votre nom de code est figé, c'est lui qui sera écrit sur votre paquet.");
+  if (moi.groupe.tirageLe) return { erreur: "Le tirage est fait : votre nom de code est figé, c'est lui qui sera écrit sur votre paquet." };
   const autres = await prisma.participant.findMany({ where: { groupeId: moi.groupeId }, select: { nomDeCode: true } });
   await prisma.participant.update({
     where: { id: moi.id },
@@ -343,17 +394,17 @@ export async function supprimerSouhait(jeton: string, souhaitId: string) {
 }
 
 /** Réserver (ou libérer) l'idée d'un autre membre du groupe, pour éviter les doublons. */
-export async function basculerReservation(jeton: string, souhaitId: string) {
+export async function basculerReservation(jeton: string, souhaitId: string): Promise<Refus> {
   const moi = await participantParJeton(jeton);
   const souhait = await prisma.souhait.findUnique({ where: { id: souhaitId }, include: { participant: true } });
-  if (!souhait || souhait.participant.groupeId !== moi.groupeId) throw new Error("Idée introuvable.");
-  if (souhait.participantId === moi.id) throw new Error("On ne réserve pas sa propre idée.");
+  if (!souhait || souhait.participant.groupeId !== moi.groupeId) return { erreur: "Idée introuvable." };
+  if (souhait.participantId === moi.id) return { erreur: "On ne réserve pas sa propre idée." };
   if (souhait.reserveParId === moi.id) {
     await prisma.souhait.update({ where: { id: souhaitId }, data: { reserveParId: null } });
   } else {
     // Conditionnel : deux personnes qui touchent « réserver » à la même seconde ne s'écrasent pas.
     const { count } = await prisma.souhait.updateMany({ where: { id: souhaitId, reserveParId: null }, data: { reserveParId: moi.id } });
-    if (!count) throw new Error("Quelqu'un vient de la réserver.");
+    if (!count) return { erreur: "Quelqu'un vient de la réserver." };
   }
   revalidatePath(`/p/${jeton}`);
 }

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { tirer } from "./tirage";
+import { retirerDuTirage, tirer } from "./tirage";
 
 const valide = (ids: string[], r: Map<string, string>, excl: { a: string; b: string }[] = []) => {
   assert.equal(r.size, ids.length);
@@ -39,4 +39,57 @@ test("les exclusions sont respectées dans les deux sens", () => {
 test("impossible : trois personnes dont deux exclues ne laissent qu'un cycle… qui casse", () => {
   // a ne peut offrir qu'à c, b qu'à c : impossible.
   assert.equal(tirer(["a", "b", "c"], [{ a: "a", b: "b" }]), null);
+});
+
+
+/** Une table est valide : chacun offre à un autre, chacun reçoit une fois, exclusions respectées. */
+const tableValide = (t: Map<string, string>, excl: { a: string; b: string }[] = []) => {
+  assert.equal(new Set(t.values()).size, t.size, "chacun reçoit une seule fois");
+  for (const [de, pour] of t) {
+    assert.notEqual(de, pour);
+    assert.ok(t.has(pour), "le destinataire fait partie du groupe");
+    for (const { a, b } of excl) assert.ok(!(de === a && pour === b) && !(de === b && pour === a));
+  }
+};
+
+test("désistement : A → X → B devient A → B, une seule personne change", () => {
+  const t = new Map([["a", "x"], ["x", "b"], ["b", "c"], ["c", "a"]]);
+  const r = retirerDuTirage(t, "x")!;
+  assert.deepEqual(r.changes, ["a"]);
+  assert.equal(r.table.get("a"), "b");
+  assert.equal(r.table.has("x"), false);
+  tableValide(r.table);
+});
+
+test("désistement dans un couple A ↔ X : A est raccroché ailleurs, deux personnes changent", () => {
+  const t = new Map([["a", "x"], ["x", "a"], ["b", "c"], ["c", "d"], ["d", "b"]]);
+  const r = retirerDuTirage(t, "x")!;
+  assert.equal(r.changes.length, 2);
+  assert.ok(r.changes.includes("a"));
+  tableValide(r.table);
+  assert.equal(r.table.size, 4);
+});
+
+test("désistement : A et B s'excluent, on raccroche ailleurs", () => {
+  const t = new Map([["a", "x"], ["x", "b"], ["b", "c"], ["c", "d"], ["d", "a"]]);
+  const excl = [{ a: "a", b: "b" }];
+  const r = retirerDuTirage(t, "x", excl)!;
+  assert.equal(r.changes.length, 2);
+  tableValide(r.table, excl);
+});
+
+test("désistement : cent cas au hasard restent valides", () => {
+  for (let k = 0; k < 100; k++) {
+    const ids = Array.from({ length: 8 }, (_, i) => `p${i}`);
+    const t = tirer(ids)!;
+    const r = retirerDuTirage(t, ids[k % 8]);
+    assert.ok(r);
+    tableValide(r.table);
+    assert.ok(r.changes.length >= 1 && r.changes.length <= 2);
+    for (const [de, pour] of r.table) if (!r.changes.includes(de)) assert.equal(pour, t.get(de), "les autres ne changent pas");
+  }
+});
+
+test("désistement : moins de trois restants, impossible", () => {
+  assert.equal(retirerDuTirage(new Map([["a", "b"], ["b", "c"], ["c", "a"]]), "a"), null);
 });

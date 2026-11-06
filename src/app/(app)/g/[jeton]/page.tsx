@@ -1,4 +1,4 @@
-import { CalendarDays, Crown, Eye, EyeOff, Link2, Mail, MessageSquare, Shuffle, Trash2, Wallet, X } from "lucide-react";
+import { CalendarDays, Crown, Eye, EyeOff, Link2, Mail, MessageSquare, Shuffle, Trash2, UserMinus, Wallet, X } from "lucide-react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import {
   ajouterParticipants,
   annulerTirage,
   basculerExclusion,
+  desisterApresTirage,
   lancerTirage,
   modifierGroupe,
   regenererInvitation,
@@ -141,6 +142,10 @@ export default async function Organisation({
             <p className="mt-1 text-sm text-doux">
               Envoyez à chacun son lien : il y découvrira à qui il offre. {ouverts}/{groupe.participants.length} l&apos;ont déjà ouvert.
             </p>
+            <p className="mt-2 text-sm text-doux">
+              Quelqu&apos;un se désiste ? Touchez <UserMinus size={14} className="inline align-[-2px]" aria-label="se désiste" /> à côté
+              de son prénom : le tirage s&apos;ajuste pour une ou deux personnes seulement, sans tout refaire.
+            </p>
             <div className="mt-4">
               <BoutonAction
                 action={annulerTirage.bind(null, jeton)}
@@ -220,6 +225,16 @@ export default async function Organisation({
                 )}
               </div>
               <Partager chemin={`/p/${p.jeton}`} texte={messagePerso(p.prenom)} compact />
+              {tire && (
+                <BoutonAction
+                  action={desisterApresTirage.bind(null, jeton, p.id)}
+                  confirmation={`${p.prenom} se désiste ? Sa liste est effacée, et le tirage est ajusté pour une ou deux personnes seulement (prévenues dans leur espace et par e-mail). Les autres gardent leur tirage.`}
+                  className="grid size-9 place-items-center rounded-full text-doux hover:bg-cerise-clair hover:text-cerise"
+                  titre={`${p.prenom} se désiste`}
+                >
+                  <UserMinus size={16} />
+                </BoutonAction>
+              )}
               {!tire && (
                 <BoutonAction
                   action={retirerParticipant.bind(null, jeton, p.id)}

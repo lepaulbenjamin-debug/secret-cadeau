@@ -135,6 +135,12 @@ export default async function EspacePerso({
       {/* Ma personne */}
       {destinataire ? (
         <section className="space-y-4">
+          {moi.tirageAjusteLe && (
+            <p role="status" className="rounded-2xl bg-or/20 p-4 text-sm">
+              🔄 <strong>Votre tirage a changé</strong> le {dateLongue(moi.tirageAjusteLe)} : un participant s&apos;est désisté, et
+              vous offrez maintenant à quelqu&apos;un d&apos;autre. Ouvrez le paquet pour le découvrir.
+            </p>
+          )}
           <Revelation prenom={nomVisible(destinataire, anonyme)} mystere={anonyme} />
 
           <div className="carte">

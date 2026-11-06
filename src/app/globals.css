@@ -155,3 +155,23 @@ body {
 .prose-qo .resume p { margin: 0; }
 .prose-qo .not-prose a { text-decoration: none; }
 @media (min-width: 640px) { .prose-qo h1 { font-size: 2.6rem; } }
+
+/*
+ * ⚠️ LES LISTES DÉROULANTES : la flèche du navigateur se colle au bord droit
+ * (Safari, Chrome), et le `padding` n'y change rien. On la remplace par la
+ * nôtre, avec une vraie marge — à vérifier sur CHAQUE nouveau <select>.
+ */
+select.champ {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2366627a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 1.1rem;
+}
+@media (prefers-color-scheme: dark) {
+  select.champ {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a9a6c2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+}

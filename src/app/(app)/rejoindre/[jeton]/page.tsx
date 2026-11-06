@@ -42,7 +42,7 @@ export default async function Rejoindre({ params }: { params: Promise<{ jeton: s
         </div>
       ) : (
         <div className="carte">
-          <FormulaireRejoindre jetonInvitation={jeton} />
+          <FormulaireRejoindre jetonInvitation={jeton} groupe={groupe.nom} />
         </div>
       )}
 

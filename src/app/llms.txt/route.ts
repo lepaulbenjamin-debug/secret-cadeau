@@ -23,6 +23,7 @@ export function GET() {
 - Questions anonymes du Père Noël secret à la personne tirée.
 - Mode mystère : chacun reçoit un nom de code aléatoire (par exemple « Pingouin Farceur ») ; on offre à un nom de code sans savoir qui c'est, d'après sa liste ; les listes sont alors obligatoires avant le tirage.
 - Rappels par e-mail : au tirage, une semaine avant et la veille de l'échange, sans jamais nommer la personne tirée ; désinscription en un clic.
+- Listes de cadeaux hors Secret Santa (anniversaire, naissance, mariage) : la personne fêtée note ses idées et partage un lien ; ses proches réservent « Je m'en occupe » avec leur prénom ; elle ne voit jamais ce qui est réservé.
 - Gratuit, sans compte, sans publicité. Les liens Amazon des listes peuvent porter l'identifiant Partenaires Amazon du site.
 
 ## Guides
@@ -31,7 +32,8 @@ ${GUIDES.map((g) => `- [${g.titre}](${SITE_URL}${g.chemin}) : ${g.description}`)
 
 ## Utiliser le service
 
-- [Créer un groupe](${SITE_URL}/nouveau)
+- [Créer un groupe (Secret Santa)](${SITE_URL}/nouveau)
+- [Créer une liste de cadeaux d'anniversaire](${SITE_URL}/liste/nouvelle)
 `;
   return new Response(texte, { headers: { "content-type": "text/markdown; charset=utf-8" } });
 }

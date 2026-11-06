@@ -48,6 +48,14 @@ const QUESTIONS = [
     r: "Oui. L'organisateur peut annuler le tirage, ajouter ou retirer un participant, modifier les exclusions, puis relancer. Chacun découvre alors sa nouvelle personne sur son lien. Prévenez le groupe avant, pour que personne n'achète un cadeau pour la mauvaise personne.",
   },
   {
+    q: "Que faire si quelqu'un se désiste après le tirage ?",
+    r: "L'organisateur touche « se désiste » à côté de son prénom. Au lieu de tout refaire, Qui Offre ajuste le tirage pour une ou deux personnes seulement, qui sont prévenues dans leur espace et par e-mail ; les autres gardent leur tirage et leur cadeau.",
+  },
+  {
+    q: "Peut-on faire une liste de cadeaux pour un anniversaire, sans tirage au sort ?",
+    r: "Oui. Créez une liste de cadeaux (anniversaire, naissance, mariage…), ajoutez vos idées et partagez le lien. Vos proches réservent « Je m'en occupe » avec leur prénom pour éviter les doublons ; vous, vous ne voyez jamais ce qui a été réservé.",
+  },
+  {
     q: "Qu'est-ce que le mode mystère ?",
     r: "C'est une option du groupe. Chaque participant reçoit un nom de code amusant tiré au hasard, comme « Pingouin Farceur 🐧 ». Les participants ne voient que les noms de code, même pour la personne qu'ils ont tirée : on choisit le cadeau d'après sa liste d'envies et on écrit le nom de code sur le paquet. Dans ce mode, les listes d'envies sont obligatoires avant le tirage, sauf si l'organisateur décide de passer outre.",
   },

@@ -128,6 +128,13 @@ export default function Page() {
         <li>les cadeaux des enfants, gérés par les parents pour toute la famille.</li>
       </ul>
       <p>
+        Pour un anniversaire, une naissance ou un mariage, Qui Offre propose une{" "}
+        <Link href="/liste/nouvelle">liste de cadeaux sans tirage au sort</Link> : vous notez vos envies, vous partagez
+        le lien, et vos proches réservent « Je m&apos;en occupe » avec leur prénom. Ils voient ce que les autres ont
+        réservé, vous jamais.
+      </p>
+      <AppelActionListe />
+      <p>
         Pour les règles du jeu, voyez notre <Link href="/secret-santa">guide du Secret Santa</Link>. Pour les cadeaux
         des enfants et des grands-parents, lisez{" "}
         <Link href="/secret-santa-en-famille">Secret Santa en famille</Link>.
@@ -158,5 +165,15 @@ export default function Page() {
         ]}
       />
     </Article>
+  );
+}
+
+function AppelActionListe() {
+  return (
+    <aside className="not-prose my-8 rounded-2xl bg-sapin p-6 text-center text-carte">
+      <p className="font-titre text-xl font-semibold">🎂 Une liste pour votre anniversaire ?</p>
+      <p className="mt-1 text-sm opacity-90">Créée en 30 secondes, partagée en un lien, réservations invisibles pour vous.</p>
+      <Link href="/liste/nouvelle" className="bouton bouton-cerise mt-4">Créer ma liste de cadeaux</Link>
+    </aside>
   );
 }

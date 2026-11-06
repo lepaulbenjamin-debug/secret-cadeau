@@ -7,7 +7,7 @@ import { SITE_URL } from "@/lib/site";
  * (GPTBot, ClaudeBot, PerplexityBot, Google-Extended…) : être cité par eux est
  * un objectif, pas un risque. Les espaces privés ne le sont pour personne.
  */
-const PRIVE = ["/p/", "/g/", "/rejoindre/", "/api/", "/nouveau"];
+const PRIVE = ["/p/", "/g/", "/rejoindre/", "/api/", "/nouveau", "/liste/", "/ma-liste/"];
 
 export default function robots(): MetadataRoute.Robots {
   return {

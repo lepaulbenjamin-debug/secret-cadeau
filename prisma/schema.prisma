@@ -135,3 +135,43 @@ model Rappel {
 
   @@unique([participantId, type])
 }
+
+/// Une liste de cadeaux hors Secret Santa (anniversaire, naissance…) : une
+/// personne la remplit, ses proches réservent. Deux liens, comme pour les
+/// groupes : `jetonProprio` pour la remplir, `jetonPartage` pour la consulter.
+model Liste {
+  id            String    @id @default(cuid())
+  /// La personne fêtée (« Léa »).
+  prenom        String
+  /// anniversaire | naissance | mariage | noel | autre
+  occasion      String    @default("anniversaire")
+  date          DateTime?
+  message       String    @default("")
+  jetonProprio  String    @unique
+  jetonPartage  String    @unique
+  /// Pour lui envoyer ses liens (facultatif). Visible de personne.
+  emailProprio  String    @default("")
+  bienvenueEnvoyeeLe DateTime?
+  creeLe        DateTime  @default(now())
+
+  idees IdeeListe[]
+}
+
+model IdeeListe {
+  id        String   @id @default(cuid())
+  listeId   String
+  liste     Liste    @relation(fields: [listeId], references: [id], onDelete: Cascade)
+  titre     String
+  lien      String   @default("")
+  image     String   @default("")
+  prix      Int?
+  note      String   @default("")
+  /// Réservation par un proche : son prénom (montré aux autres proches, JAMAIS à la
+  /// personne fêtée) et le jeton de son appareil (pour qu'il puisse annuler).
+  reservePar   String    @default("")
+  jetonReserve String    @default("")
+  reserveLe    DateTime?
+  creeLe    DateTime @default(now())
+
+  @@index([listeId])
+}

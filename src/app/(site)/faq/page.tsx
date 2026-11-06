@@ -48,6 +48,10 @@ const QUESTIONS = [
     r: "Oui. L'organisateur peut annuler le tirage, ajouter ou retirer un participant, modifier les exclusions, puis relancer. Chacun découvre alors sa nouvelle personne sur son lien. Prévenez le groupe avant, pour que personne n'achète un cadeau pour la mauvaise personne.",
   },
   {
+    q: "J'ai perdu mon lien, comment le retrouver ?",
+    r: "Sur la page « Retrouver mes liens », indiquez votre adresse e-mail : si elle a été donnée à l'inscription (par vous ou par l'organisateur), vous recevez tous vos liens en un seul message. Sinon, demandez votre lien à l'organisateur du groupe, qui le retrouve sur sa page.",
+  },
+  {
     q: "Que faire si quelqu'un se désiste après le tirage ?",
     r: "L'organisateur touche « se désiste » à côté de son prénom. Au lieu de tout refaire, Qui Offre ajuste le tirage pour une ou deux personnes seulement, qui sont prévenues dans leur espace et par e-mail ; les autres gardent leur tirage et leur cadeau.",
   },

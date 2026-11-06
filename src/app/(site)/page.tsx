@@ -115,7 +115,10 @@ export default function Accueil() {
               <Link href="/nouveau" className="bouton bouton-cerise text-lg">Organiser un tirage au sort</Link>
               <Link href="/secret-santa" className="bouton bouton-discret">Comment ça marche ?</Link>
             </div>
-            <p className="mt-2 text-sm text-doux">Vous avez reçu un lien ? Ouvrez-le simplement.</p>
+            <p className="mt-2 text-sm text-doux">
+              Vous avez reçu un lien ? Ouvrez-le simplement. Perdu ?{" "}
+              <Link href="/retrouver" className="underline">Retrouver mes liens</Link>
+            </p>
           </div>
           <div aria-hidden className="carte mx-auto w-full max-w-sm rotate-1 !p-0 overflow-hidden shadow-sm">
             <div className="bg-sapin p-6 text-center text-carte">

@@ -81,3 +81,8 @@ test("site qui refuse les robots : titre de l'adresse", async () => {
   const a = await apercuDuLien("https://www.fnac.com/a17235/Casque-Bluetooth-Sony", { fetcher: f, resoudre: async () => ["93.184.216.34"] });
   assert.equal(a.titre, "Casque Bluetooth Sony");
 });
+
+test("entités françaises", async () => {
+  const { decoder } = await import("./apercu");
+  assert.equal(decoder("Th&eacute; &agrave; la menthe &laquo;&nbsp;bio&nbsp;&raquo; &Eacute;dition"), "Thé à la menthe « bio » Édition");
+});

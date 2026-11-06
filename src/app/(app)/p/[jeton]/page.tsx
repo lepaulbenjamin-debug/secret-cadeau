@@ -17,6 +17,8 @@ import { ChampsSouhait } from "@/components/champs-souhait";
 import { CopierLien } from "@/components/copier-lien";
 import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Formulaire } from "@/components/formulaire";
+import { ImportListe } from "@/components/import-liste";
+import { LienListeExterne } from "@/components/lien-liste-externe";
 import { Revelation } from "@/components/revelation";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { Souhait, type SouhaitAffiche } from "@/components/souhait";
@@ -58,7 +60,7 @@ export default async function EspacePerso({
     prisma.participant.findMany({
       where: { groupeId: groupe.id, id: { not: moi.id } },
       orderBy: { prenom: "asc" },
-      select: { id: true, prenom: true, nomDeCode: true, souhaits: { orderBy: { creeLe: "asc" }, select: champsSouhait } },
+      select: { id: true, prenom: true, nomDeCode: true, listeExterne: true, souhaits: { orderBy: { creeLe: "asc" }, select: champsSouhait } },
     }),
     prisma.question.findMany({ where: { destinataireId: moi.id }, orderBy: { creeLe: "asc" } }),
     prisma.question.findMany({ where: { pereId: moi.id }, orderBy: { creeLe: "asc" } }),
@@ -145,6 +147,8 @@ export default async function EspacePerso({
 
           <div className="carte">
             <h2 className="flex items-center gap-2 font-titre text-xl font-semibold"><Gift size={20} /> Ses idées</h2>
+            {/* En mode mystère, une liste tenue ailleurs porte souvent le nom de son auteur : on ne la montre pas. */}
+            {!anonyme && <LienListeExterne lien={destinataire.listeExterne} />}
             {destinataire.souhaits.length ? (
               <ul className="mt-2 divide-y divide-trait">
                 {destinataire.souhaits.map((s) => (
@@ -253,6 +257,7 @@ export default async function EspacePerso({
             <ChampsSouhait id="nouveau" jeton={jeton} />
           </Formulaire>
         </div>
+        <ImportListe jeton={jeton} listeExterne={moi.listeExterne} mystere={anonyme} />
       </section>
 
       {/* Mes coordonnées */}
@@ -292,6 +297,7 @@ export default async function EspacePerso({
                 <summary className="cursor-pointer py-1 font-semibold">
                   {nomVisible(p, anonyme)} <span className="font-normal text-doux">· {p.souhaits.length} idée{p.souhaits.length > 1 ? "s" : ""}</span>
                 </summary>
+                {!anonyme && p.listeExterne && <div className="pb-2"><LienListeExterne lien={p.listeExterne} /></div>}
                 {p.souhaits.length ? (
                   <ul className="divide-y divide-trait">
                     {p.souhaits.map((s) => (

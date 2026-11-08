@@ -12,7 +12,7 @@ import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
 import { prisma } from "@/lib/prisma";
 import { dateOuNull, emailFacultatif, entierPositif, lireIdee, texte } from "@/lib/saisie";
 import { envoyerAjustements, envoyerBienvenueOrganisateur, envoyerLiensRetrouves, envoyerRappels } from "@/lib/rappels-serveur";
-import { retirerDuTirage, tirer } from "@/lib/tirage";
+import { echangerTirages, retirerDuTirage, tirer } from "@/lib/tirage";
 
 export type Etat = { erreur?: string; ok?: string } | null;
 
@@ -221,6 +221,37 @@ export async function desisterApresTirage(jetonAdmin: string, participantId: str
   });
   after(() => envoyerAjustements(r.changes).then((b) => console.log("Ajustement du tirage :", JSON.stringify(b))));
   revalidatePath(`/g/${jetonAdmin}`);
+}
+
+/**
+ * L'organisateur échange les destinataires de deux personnes, sans jamais voir
+ * le tirage. Les deux sont prévenues (espace + e-mail, sans nom) et perdent les
+ * questions posées à leur ancien destinataire.
+ */
+export async function echangerTirage(jetonAdmin: string, aId: string, bId: string): Promise<Refus> {
+  const groupe = await groupeParJetonAdmin(jetonAdmin);
+  if (!groupe.tirageLe) return { erreur: "Le tirage n'est pas encore fait." };
+  if (aId === bId) return { erreur: "Choisissez deux personnes différentes." };
+  const [participants, exclusions] = await Promise.all([
+    prisma.participant.findMany({ where: { groupeId: groupe.id }, select: { id: true, destinataireId: true } }),
+    prisma.exclusion.findMany({ where: { groupeId: groupe.id }, select: { aId: true, bId: true } }),
+  ]);
+  const table = new Map(participants.filter((p) => p.destinataireId).map((p) => [p.id, p.destinataireId!]));
+  if (!table.has(aId) || !table.has(bId)) return { erreur: "Participant introuvable." };
+  const r = echangerTirages(table, aId, bId, exclusions.map((e) => ({ a: e.aId, b: e.bId })));
+  // Message volontairement vague : préciser la raison dévoilerait une partie du tirage.
+  if (!r) return { erreur: "Cet échange n'est pas possible avec le tirage actuel (quelqu'un s'offrirait à lui-même, ou une exclusion l'interdit)." };
+
+  const maintenant = new Date();
+  await prisma.$transaction([
+    prisma.question.deleteMany({ where: { pereId: { in: [aId, bId] } } }),
+    // Libérer d'abord : `destinataireId` est unique.
+    prisma.participant.updateMany({ where: { id: { in: [aId, bId] } }, data: { destinataireId: null } }),
+    prisma.participant.update({ where: { id: aId }, data: { destinataireId: r.get(aId)!, tirageAjusteLe: maintenant } }),
+    prisma.participant.update({ where: { id: bId }, data: { destinataireId: r.get(bId)!, tirageAjusteLe: maintenant } }),
+  ]);
+  after(() => envoyerAjustements([aId, bId]).then((b) => console.log("Échange de tirages :", JSON.stringify(b))));
+  revalidatePath("/", "layout");
 }
 
 export async function basculerExclusion(jetonAdmin: string, x: string, y: string): Promise<Refus> {

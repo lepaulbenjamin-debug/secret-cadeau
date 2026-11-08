@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { retirerDuTirage, tirer } from "./tirage";
+import { echangerTirages, retirerDuTirage, tirer } from "./tirage";
 
 const valide = (ids: string[], r: Map<string, string>, excl: { a: string; b: string }[] = []) => {
   assert.equal(r.size, ids.length);
@@ -92,4 +92,20 @@ test("désistement : cent cas au hasard restent valides", () => {
 
 test("désistement : moins de trois restants, impossible", () => {
   assert.equal(retirerDuTirage(new Map([["a", "b"], ["b", "c"], ["c", "a"]]), "a"), null);
+});
+
+test("échange de deux tirages : A ↔ B échangent leurs destinataires", () => {
+  const t = new Map([["a", "x"], ["x", "b"], ["b", "y"], ["y", "a"]]);
+  const r = echangerTirages(t, "a", "b")!;
+  assert.equal(r.get("a"), "y");
+  assert.equal(r.get("b"), "x");
+  tableValide(r);
+});
+
+test("échange refusé : quelqu'un s'offrirait à lui-même, ou exclusion", () => {
+  const t = new Map([["a", "b"], ["b", "c"], ["c", "a"]]);
+  assert.equal(echangerTirages(t, "a", "b"), null, "a tirait b : b s'offrirait à lui-même");
+  const t2 = new Map([["a", "x"], ["x", "b"], ["b", "y"], ["y", "a"]]);
+  assert.equal(echangerTirages(t2, "a", "b", [{ a: "a", b: "y" }]), null);
+  assert.equal(echangerTirages(t2, "a", "a"), null);
 });

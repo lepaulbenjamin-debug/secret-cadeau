@@ -117,3 +117,28 @@ export function retirerDuTirage(
   reste.set(a, d);
   return { table: reste, changes: [a, c] };
 }
+
+/**
+ * L'organisateur échange les destinataires de deux personnes (une erreur à
+ * corriger, deux personnes qui préfèrent s'inverser…), sans voir le tirage.
+ *
+ * A offrait à X, B offrait à Y : A offre désormais à Y, B à X. Refusé (`null`)
+ * si quelqu'un s'offrirait à lui-même (A tirait B, ou B tirait A), ou si une
+ * exclusion l'interdit.
+ */
+export function echangerTirages(
+  table: ReadonlyMap<string, string>,
+  a: string,
+  b: string,
+  exclusions: readonly Paire[] = [],
+): Map<string, string> | null {
+  const x = table.get(a);
+  const y = table.get(b);
+  if (!x || !y || a === b) return null;
+  const interdit = new Set(exclusions.flatMap(({ a: p, b: q }) => [`${p}>${q}`, `${q}>${p}`]));
+  if (y === a || x === b || interdit.has(`${a}>${y}`) || interdit.has(`${b}>${x}`)) return null;
+  const nouvelle = new Map(table);
+  nouvelle.set(a, y);
+  nouvelle.set(b, x);
+  return nouvelle;
+}

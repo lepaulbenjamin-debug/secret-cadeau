@@ -9,6 +9,7 @@ import {
   annulerTirage,
   basculerExclusion,
   desisterApresTirage,
+  echangerTirage,
   lancerTirage,
   modifierGroupe,
   modifierParticipant,
@@ -19,6 +20,7 @@ import { AjoutExclusion } from "@/components/ajout-exclusion";
 import { BoutonAction } from "@/components/bouton-action";
 import { ChampsParticipant } from "@/components/champs-participant";
 import { CopierLien } from "@/components/copier-lien";
+import { EchangeTirages } from "@/components/echange-tirages";
 import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Formulaire } from "@/components/formulaire";
 import { Partager } from "@/components/partager";
@@ -148,6 +150,16 @@ export default async function Organisation({
               Quelqu&apos;un se désiste ? Touchez <UserMinus size={14} className="inline align-[-2px]" aria-label="se désiste" /> à côté
               de son prénom : le tirage s&apos;ajuste pour une ou deux personnes seulement, sans tout refaire.
             </p>
+            <details className="mt-4 rounded-xl bg-creme p-3">
+              <summary className="cursor-pointer text-sm font-semibold text-sapin">Échanger les tirages de deux personnes</summary>
+              <p className="mt-2 mb-3 text-sm text-doux">
+                Chacune offrira à la personne que l&apos;autre avait tirée. Vous ne verrez toujours pas qui offre à qui.
+              </p>
+              <EchangeTirages
+                participants={groupe.participants.map(({ id, prenom }) => ({ id, prenom }))}
+                action={echangerTirage.bind(null, jeton)}
+              />
+            </details>
             <div className="mt-4">
               <BoutonAction
                 action={annulerTirage.bind(null, jeton)}

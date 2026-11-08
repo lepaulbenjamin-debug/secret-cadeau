@@ -176,7 +176,7 @@ export function contenuAjustement(g: { nom: string; nomsDeCode: boolean }, p: { 
     groupe: g.nom,
     bonjour: p.prenom,
     lignes: [
-      "Un participant s'est désisté, et le tirage a été ajusté : la personne à qui vous offrez a changé.",
+      "L'organisateur a ajusté le tirage (un désistement ou un échange) : la personne à qui vous offrez a changé.",
       g.nomsDeCode
         ? "Ouvrez votre espace pour découvrir votre nouveau nom de code et sa liste d'envies."
         : "Ouvrez votre espace pour la découvrir, avec sa liste d'envies. Si vous aviez déjà acheté un cadeau, gardez-le pour une autre occasion… ou demandez conseil à l'organisateur !",

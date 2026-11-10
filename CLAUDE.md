@@ -22,7 +22,8 @@ Voir `README.md` et `DEPLOIEMENT.md`.
   le message (« Minified React error #441 »). Renvoyer `{ erreur }` (type `Refus` ou `Etat`).
 - Le jeton d'un lien EST l'identité : ne jamais afficher le jeton, le `destinataireId` ni les
   coordonnées d'un participant sur la page d'un autre. L'organisateur ne voit jamais qui offre à qui.
-- **Aucun e-mail ne nomme la personne tirée.**
+- **Aucun e-mail ni aucune notification ne nomme la personne tirée** (une notification s'affiche
+  sur l'écran verrouillé).
 - Amazon : jamais de récupération de ses pages (contrat Partenaires) ; l'identifiant d'affiliation
   est posé à l'affichage (`src/lib/affiliation.ts`).
 - Migrations : écrites à la main dans `prisma/migrations/`, puis vérifiées avec

@@ -86,6 +86,31 @@ l'application marche, simplement sans e-mail.
 5. **Redeploy**. La tâche part chaque matin vers 9 h (`vercel.json`) ; son bilan est dans
    Vercel → **Logs** (« Rappels : … »).
 
+## 5 bis. Les notifications sur téléphone (Web Push)
+
+Une fois Qui Offre installée sur l'écran d'accueil (la carte « Qui Offre sur votre
+téléphone » explique comment, iPhone ou Android), chacun peut activer les
+notifications : tirage fait, question de son Père Noël secret, réponse reçue, J-7,
+veille, tirage modifié. Sur iPhone, il faut iOS 16.4 ou plus, et l'application installée.
+
+Une seule fois, sur le Mac, dans le dossier du projet :
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Dans Vercel → **Settings → Environment Variables** (Production) :
+
+- `VAPID_PUBLIC_KEY` = la « Public Key » affichée ;
+- `VAPID_PRIVATE_KEY` = la « Private Key » (secrète : elle ne sert qu'ici) ;
+- `VAPID_SUJET` = `mailto:contact@creawebconseil.fr`.
+
+Puis **Redeploy**. Sans ces variables, le bouton « Activer les notifications »
+n'apparaît pas ; l'installation, elle, reste proposée.
+
+⚠️ Ne régénérez pas ces clés plus tard : tous les abonnements existants cesseraient
+de recevoir quoi que ce soit.
+
 ## 6. Le référencement
 
 1. **Google Search Console** (<https://search.google.com/search-console>) : ajoutez la propriété

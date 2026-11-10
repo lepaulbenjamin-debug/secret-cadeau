@@ -58,3 +58,8 @@ test("pas deux rappels en moins de 20 h, sauf la veille", () => {
   assert.equal(rappelDu(g({ dateEchange: jour(5) }), p({ dejaEnvoyes: ["tirage"], dernierEnvoi: hier }), maintenant), null);
   assert.equal(rappelDu(g({ dateEchange: jour(1) }), p({ dejaEnvoyes: ["tirage"], dernierEnvoi: hier }), maintenant), "veille");
 });
+
+test("sans e-mail mais avec notifications : le rappel est dû", () => {
+  assert.equal(rappelDu(g({ tirageLe: maintenant }), p({ email: "", push: true }), maintenant), "tirage");
+  assert.equal(rappelDu(g({ tirageLe: maintenant }), p({ email: "", push: false }), maintenant), null);
+});

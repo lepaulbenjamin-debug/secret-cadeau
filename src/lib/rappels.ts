@@ -23,6 +23,8 @@ export type ParticipantRappel = {
   nomDeCode: string;
   nbSouhaits: number;
   dejaEnvoyes: TypeRappel[];
+  /** Au moins un appareil abonné aux notifications. */
+  push?: boolean;
   /** Date du dernier rappel envoyé, quel qu'il soit. */
   dernierEnvoi?: Date | null;
 };
@@ -37,7 +39,8 @@ export type GroupeRappel = {
 
 /** Le rappel à envoyer aujourd'hui à ce participant, ou rien. Un seul par jour. */
 export function rappelDu(g: GroupeRappel, p: ParticipantRappel, maintenant = new Date()): TypeRappel | null {
-  if (!p.email || !p.rappelsEmail) return null;
+  // Joignable par e-mail (rappels non coupés) ou par notification.
+  if ((!p.email || !p.rappelsEmail) && !p.push) return null;
   const jours = g.dateEchange ? joursAvant(g.dateEchange, maintenant) : null;
   if (jours !== null && jours < 0) return null; // l'échange est passé
   const deja = new Set(p.dejaEnvoyes);

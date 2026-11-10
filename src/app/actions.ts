@@ -11,6 +11,8 @@ import { nouveauJeton } from "@/lib/jeton";
 import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
 import { prisma } from "@/lib/prisma";
 import { dateOuNull, emailFacultatif, entierPositif, lireIdee, texte } from "@/lib/saisie";
+import { messageQuestion, messageReponse } from "@/lib/push";
+import { envoyerPush } from "@/lib/push-serveur";
 import { envoyerAjustements, envoyerBienvenueOrganisateur, envoyerLiensRetrouves, envoyerRappels } from "@/lib/rappels-serveur";
 import { echangerTirages, retirerDuTirage, tirer } from "@/lib/tirage";
 
@@ -478,6 +480,9 @@ export async function poserQuestion(jeton: string, _: Etat, f: FormData): Promis
   if (!t) return { erreur: "Votre question est vide." };
   if ((await prisma.question.count({ where: { pereId: moi.id } })) >= 30) return { erreur: "30 questions au maximum." };
   await prisma.question.create({ data: { pereId: moi.id, destinataireId: moi.destinataireId, texte: t } });
+  // Notification à la personne tirée, ouverte sur SON espace (sans dire qui demande, évidemment).
+  const destinataire = await prisma.participant.findUnique({ where: { id: moi.destinataireId }, select: { id: true, jeton: true } });
+  if (destinataire) after(() => envoyerPush([destinataire.id], messageQuestion(moi.groupe.nom, destinataire.jeton)).then(() => {}));
   revalidatePath("/", "layout");
   return { ok: "Question envoyée, anonymement." };
 }
@@ -486,8 +491,11 @@ export async function repondreQuestion(jeton: string, questionId: string, _: Eta
   const moi = await participantParJeton(jeton);
   const r = texte(f, "reponse", 400);
   if (!r) return { erreur: "Votre réponse est vide." };
-  const { count } = await prisma.question.updateMany({ where: { id: questionId, destinataireId: moi.id }, data: { reponse: r } });
-  if (!count) return { erreur: "Question introuvable." };
+  const question = await prisma.question.findFirst({ where: { id: questionId, destinataireId: moi.id }, include: { pere: { select: { id: true, jeton: true } } } });
+  if (!question) return { erreur: "Question introuvable." };
+  await prisma.question.update({ where: { id: question.id }, data: { reponse: r } });
+  // Le Père Noël est prévenu sur son espace ; une réponse modifiée ne renotifie pas.
+  if (!question.reponse) after(() => envoyerPush([question.pere.id], messageReponse(moi.groupe.nom, question.pere.jeton)).then(() => {}));
   revalidatePath("/", "layout");
   return { ok: "Réponse envoyée." };
 }

@@ -71,6 +71,7 @@ model Participant {
   questionsPosees Question[] @relation("Pere")
   questionsRecues Question[] @relation("Destinataire")
   rappels         Rappel[]
+  abonnementsPush AbonnementPush[]
   exclusionsA     Exclusion[] @relation("ExclusionA")
   exclusionsB     Exclusion[] @relation("ExclusionB")
 
@@ -185,4 +186,22 @@ model IdeeListe {
 model EnvoiLiens {
   email        String   @id
   dernierEnvoi DateTime
+}
+
+/**
+ * Un appareil abonné aux notifications pour l'espace d'un participant.
+ * Un même téléphone peut suivre plusieurs espaces (plusieurs groupes) : une
+ * ligne par couple appareil × participant.
+ */
+model AbonnementPush {
+  id            String      @id @default(cuid())
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  endpoint      String
+  p256dh        String
+  auth          String
+  creeLe        DateTime    @default(now())
+
+  @@unique([endpoint, participantId])
+  @@index([participantId])
 }

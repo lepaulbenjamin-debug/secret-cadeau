@@ -2,7 +2,10 @@ import "server-only";
 
 import { envoyerEmail } from "./email";
 import { contenuBienvenue, contenuRelanceOrganisateur, relanceOrganisateurDue } from "./emails-organisateur";
+import { joursAvant } from "./format";
 import { prisma } from "./prisma";
+import { messageAjustement, messageRappel } from "./push";
+import { envoyerPush, pushConfigure } from "./push-serveur";
 import { contenuAjustement, contenuRappel, rappelDu, type TypeRappel } from "./rappels";
 import { SITE_URL } from "./site";
 
@@ -18,10 +21,19 @@ export type Bilan = { envoyes: number; echecs: number; ignores: number; motifs: 
  */
 export async function envoyerRappels({ groupeId, maintenant = new Date() }: { groupeId?: string; maintenant?: Date } = {}): Promise<Bilan> {
   const bilan: Bilan = { envoyes: 0, echecs: 0, ignores: 0, motifs: [] };
-  if (!process.env.RESEND_API_KEY) {
-    bilan.motifs.push("RESEND_API_KEY absente : aucun e-mail envoyé.");
+  const emails = Boolean(process.env.RESEND_API_KEY);
+  if (!emails && !pushConfigure()) {
+    bilan.motifs.push("Ni RESEND_API_KEY ni clés VAPID : aucun rappel envoyé.");
     return bilan;
   }
+  // Un participant est joignable par e-mail (s'il en a donné un et n'a pas coupé les
+  // rappels) ou par notification (s'il a abonné un appareil).
+  const joignable = {
+    OR: [
+      ...(emails ? [{ email: { not: "" }, rappelsEmail: true }] : []),
+      ...(pushConfigure() ? [{ abonnementsPush: { some: {} } }] : []),
+    ],
+  };
 
   const veille = new Date(maintenant.getTime() - 24 * 60 * 60 * 1000);
   const groupes = await prisma.groupe.findMany({
@@ -29,12 +41,12 @@ export async function envoyerRappels({ groupeId, maintenant = new Date() }: { gr
       ...(groupeId ? { id: groupeId } : {}),
       // Un groupe sans date ne reçoit que l'e-mail du tirage ; un échange passé, rien.
       OR: [{ dateEchange: { gte: veille } }, { dateEchange: null, tirageLe: { not: null } }],
-      participants: { some: { email: { not: "" }, rappelsEmail: true } },
+      participants: { some: joignable },
     },
     include: {
       participants: {
-        where: { email: { not: "" }, rappelsEmail: true },
-        include: { rappels: { select: { type: true, envoyeLe: true } }, _count: { select: { souhaits: true } } },
+        where: joignable,
+        include: { rappels: { select: { type: true, envoyeLe: true } }, _count: { select: { souhaits: true, abonnementsPush: true } } },
       },
     },
   });
@@ -43,11 +55,13 @@ export async function envoyerRappels({ groupeId, maintenant = new Date() }: { gr
 
   for (const g of groupes) {
     for (const p of g.participants) {
+      const parEmail = emails && Boolean(p.email) && p.rappelsEmail;
       const vue = {
         prenom: p.prenom,
-        email: p.email,
+        email: parEmail ? p.email : "",
         jeton: p.jeton,
         rappelsEmail: p.rappelsEmail,
+        push: p._count.abonnementsPush > 0,
         nomDeCode: p.nomDeCode,
         nbSouhaits: p._count.souhaits,
         dejaEnvoyes: p.rappels.map((r) => r.type as TypeRappel),
@@ -64,12 +78,21 @@ export async function envoyerRappels({ groupeId, maintenant = new Date() }: { gr
         bilan.ignores++; // déjà noté par une exécution concurrente
         continue;
       }
-      const c = contenuRappel(type, g, vue, { site: SITE_URL, maintenant });
-      const r = await envoyerEmail({ a: p.email, ...c }).catch((e: Error) => ({ ok: false, motif: e.message }));
-      if (r.ok) bilan.envoyes++;
+      let remis = false;
+      if (parEmail) {
+        const c = contenuRappel(type, g, vue, { site: SITE_URL, maintenant });
+        const r = await envoyerEmail({ a: p.email, ...c }).catch((e: Error) => ({ ok: false, motif: e.message }));
+        if (r.ok) remis = true;
+        else if (r.motif && bilan.motifs.length < 5) bilan.motifs.push(r.motif);
+      }
+      if (vue.push) {
+        const jours = g.dateEchange ? joursAvant(g.dateEchange, maintenant) : null;
+        if ((await envoyerPush([p.id], messageRappel(type, g.nom, p.jeton, jours))) > 0) remis = true;
+      }
+      if (remis) bilan.envoyes++;
       else {
+        // Aucun canal n'a abouti : on retirera la note pour réessayer demain.
         bilan.echecs++;
-        if (r.motif && bilan.motifs.length < 5) bilan.motifs.push(r.motif);
         await prisma.rappel.deleteMany({ where: { participantId: p.id, type } });
       }
     }
@@ -132,6 +155,9 @@ export async function envoyerBienvenueOrganisateur(groupeId: string, { prenom, j
 /** Prévient par e-mail les participants dont le tirage vient d'être ajusté (désistement). */
 export async function envoyerAjustements(participantIds: string[]): Promise<Bilan> {
   const bilan: Bilan = { envoyes: 0, echecs: 0, ignores: 0, motifs: [] };
+  // Les notifications d'abord : elles ne dépendent pas d'une adresse e-mail.
+  const notifies = await prisma.participant.findMany({ where: { id: { in: participantIds } }, include: { groupe: { select: { nom: true } } } });
+  for (const p of notifies) await envoyerPush([p.id], messageAjustement(p.groupe.nom, p.jeton));
   if (!process.env.RESEND_API_KEY) return { ...bilan, motifs: ["RESEND_API_KEY absente"] };
   const personnes = await prisma.participant.findMany({
     where: { id: { in: participantIds }, email: { not: "" }, rappelsEmail: true },

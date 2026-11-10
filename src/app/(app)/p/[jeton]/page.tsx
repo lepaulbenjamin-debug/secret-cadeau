@@ -19,6 +19,7 @@ import { CopierLien } from "@/components/copier-lien";
 import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Formulaire } from "@/components/formulaire";
 import { ImportListe } from "@/components/import-liste";
+import { InstallerApp } from "@/components/installer-app";
 import { LienListeExterne } from "@/components/lien-liste-externe";
 import { Revelation } from "@/components/revelation";
 import { SeSouvenir } from "@/components/se-souvenir";
@@ -34,7 +35,11 @@ import { prisma } from "@/lib/prisma";
  */
 export const maxDuration = 60;
 
-export const metadata: Metadata = { title: "Mon espace", robots: { index: false, follow: false } };
+export async function generateMetadata({ params }: { params: Promise<{ jeton: string }> }): Promise<Metadata> {
+  const { jeton } = await params;
+  // Installée depuis cette page, l'application s'ouvre sur cet espace (voir lib/manifeste.ts).
+  return { title: "Mon espace", robots: { index: false, follow: false }, manifest: `/p/${jeton}/manifest.webmanifest` };
+}
 
 const champsSouhait = { id: true, titre: true, lien: true, image: true, prix: true, note: true, reserveParId: true } as const;
 
@@ -130,6 +135,8 @@ export default async function EspacePerso({
           )}
         </section>
       )}
+
+      <InstallerApp jeton={jeton} clePublique={process.env.VAPID_PUBLIC_KEY ?? ""} />
 
       {bienvenue && (
         <div className="carte border-or/50 bg-[color-mix(in_oklab,var(--or)_10%,var(--carte))]">
@@ -283,6 +290,7 @@ export default async function EspacePerso({
       <details id="rappels" className="carte">
         <summary className="cursor-pointer font-titre text-xl font-semibold">Mes coordonnées et rappels</summary>
         <OuvrirSiAncre id="rappels" />
+        <InstallerApp jeton={jeton} clePublique={process.env.VAPID_PUBLIC_KEY ?? ""} compact />
         <p className="mt-2 text-sm text-doux">
           Visibles uniquement par l&apos;organisateur. Avec un e-mail, vous recevez votre lien au moment du tirage et un
           rappel une semaine puis la veille de l&apos;échange.

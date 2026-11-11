@@ -28,6 +28,9 @@ model Groupe {
   /// E-mail de l'organisateur (facultatif) : son lien d'organisateur lui est envoyé,
   /// et il est relancé si l'échange approche sans tirage.
   emailOrganisateur   String    @default("")
+  /// Compte de l'organisateur (facultatif) : le groupe apparaît dans « Mon espace ».
+  compteOrganisateurId String?
+  compteOrganisateur   Compte?  @relation("Organise", fields: [compteOrganisateurId], references: [id], onDelete: SetNull)
   rappelsOrganisateur Boolean   @default(true)
   bienvenueEnvoyeeLe  DateTime?
   relanceTirageLe     DateTime?
@@ -54,6 +57,9 @@ model Participant {
   telephone String    @default("")
   /// Lien d'une liste tenue ailleurs (Amazon, autre site), montré aux autres participants.
   listeExterne String  @default("")
+  /// Compte de la personne (facultatif) : son espace apparaît dans « Mon espace ».
+  compteId     String?
+  compte       Compte? @relation(fields: [compteId], references: [id], onDelete: SetNull)
   /// Rappels par e-mail (tirage fait, J-7, veille). Coupés en un clic depuis l'e-mail.
   rappelsEmail Boolean @default(true)
   /// La personne à qui il offre. Fixée par le tirage, connue de lui seul.
@@ -156,6 +162,8 @@ model Liste {
   emailProprio  String    @default("")
   /// Lien d'une liste tenue ailleurs (Amazon, autre site), montré aux proches.
   listeExterne  String    @default("")
+  compteId      String?
+  compte        Compte?   @relation(fields: [compteId], references: [id], onDelete: SetNull)
   bienvenueEnvoyeeLe DateTime?
   creeLe        DateTime  @default(now())
 
@@ -176,6 +184,9 @@ model IdeeListe {
   reservePar   String    @default("")
   jetonReserve String    @default("")
   reserveLe    DateTime?
+  /// Compte du proche qui a réservé, s'il était connecté : la réservation apparaît dans « Mon espace ».
+  reserveCompteId String?
+  reserveCompte   Compte? @relation(fields: [reserveCompteId], references: [id], onDelete: SetNull)
   creeLe    DateTime @default(now())
 
   @@index([listeId])
@@ -204,4 +215,51 @@ model AbonnementPush {
 
   @@unique([endpoint, participantId])
   @@index([participantId])
+}
+
+/**
+ * Un compte, FACULTATIF : les liens marchent sans. Il rassemble dans « Mon
+ * espace » les groupes, espaces et listes d'une personne, sur tous ses appareils.
+ * L'adresse est toujours vérifiée (Google, ou code / lien reçu par e-mail).
+ */
+model Compte {
+  id         String    @id @default(cuid())
+  email      String    @unique
+  nom        String    @default("")
+  creeLe     DateTime  @default(now())
+  vuLe       DateTime  @default(now())
+
+  sessions     Session[]
+  organise     Groupe[]      @relation("Organise")
+  participants Participant[]
+  listes       Liste[]
+  reservations IdeeListe[]
+}
+
+/** Une session ouverte. Le cookie porte un secret dont on ne garde que l'empreinte. */
+model Session {
+  id       String   @id
+  compteId String
+  compte   Compte   @relation(fields: [compteId], references: [id], onDelete: Cascade)
+  expireLe DateTime
+  creeLe   DateTime @default(now())
+
+  @@index([compteId])
+}
+
+/**
+ * Une demande de connexion par e-mail : un lien ET un code à 6 chiffres (le code
+ * sert quand le lien s'ouvre ailleurs, comme dans l'application installée sur
+ * iPhone). On ne garde que leurs empreintes. Usage unique, 20 minutes.
+ */
+model JetonConnexion {
+  id       String    @id
+  email    String
+  code     String
+  essais   Int       @default(0)
+  expireLe DateTime
+  utiliseLe DateTime?
+  creeLe   DateTime  @default(now())
+
+  @@index([email])
 }

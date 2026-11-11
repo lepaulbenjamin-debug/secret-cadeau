@@ -22,6 +22,9 @@ Voir `README.md` et `DEPLOIEMENT.md`.
   le message (« Minified React error #441 »). Renvoyer `{ erreur }` (type `Refus` ou `Etat`).
 - Le jeton d'un lien EST l'identité : ne jamais afficher le jeton, le `destinataireId` ni les
   coordonnées d'un participant sur la page d'un autre. L'organisateur ne voit jamais qui offre à qui.
+- Comptes **facultatifs** (`src/lib/compte/`, `src/app/actions-compte.ts`) : un lien doit toujours
+  marcher sans compte. On ne garde que des empreintes (session, lien, code). « Mon espace » montre
+  ce qui est rattaché au compte OU porte son e-mail vérifié ; jamais `destinataireId`.
 - **Aucun e-mail ni aucune notification ne nomme la personne tirée** (une notification s'affiche
   sur l'écran verrouillé).
 - Amazon : jamais de récupération de ses pages (contrat Partenaires) ; l'identifiant d'affiliation

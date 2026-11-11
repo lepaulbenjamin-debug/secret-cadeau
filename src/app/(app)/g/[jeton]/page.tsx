@@ -24,6 +24,7 @@ import { EchangeTirages } from "@/components/echange-tirages";
 import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Formulaire } from "@/components/formulaire";
 import { Partager } from "@/components/partager";
+import { RattacherCompte } from "@/components/rattacher-compte";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { SupprimerGroupe } from "@/components/supprimer-groupe";
 import { compteARebours, dateLongue } from "@/lib/format";
@@ -93,6 +94,8 @@ export default async function Organisation({
           {groupe.budget && <span className="inline-flex items-center gap-1"><Wallet size={15} /> {groupe.budget} € environ</span>}
         </div>
       </header>
+
+      <RattacherCompte sorte="admin" jeton={jeton} compteId={groupe.compteOrganisateurId} email={groupe.emailOrganisateur} chemin={`/g/${jeton}`} />
 
       {nouveau && (
         <div className="carte border-or/50 bg-[color-mix(in_oklab,var(--or)_10%,var(--carte))]">

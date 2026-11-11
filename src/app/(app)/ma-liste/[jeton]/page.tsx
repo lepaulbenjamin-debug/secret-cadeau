@@ -12,6 +12,7 @@ import { Formulaire } from "@/components/formulaire";
 import { ImportListe } from "@/components/import-liste";
 import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Partager } from "@/components/partager";
+import { RattacherCompte } from "@/components/rattacher-compte";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { Souhait } from "@/components/souhait";
 import { SupprimerListe } from "@/components/supprimer-liste";
@@ -56,6 +57,8 @@ export default async function MaListe({ params, searchParams }: { params: Promis
           </p>
         )}
       </header>
+
+      <RattacherCompte sorte="liste" jeton={jeton} compteId={liste.compteId} email={liste.emailProprio} chemin={`/ma-liste/${jeton}`} />
 
       {nouveau && (
         <div className="carte border-or/50 bg-[color-mix(in_oklab,var(--or)_10%,var(--carte))]">

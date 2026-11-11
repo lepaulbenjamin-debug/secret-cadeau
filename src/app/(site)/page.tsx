@@ -42,7 +42,7 @@ const FONCTIONS = [
   { icone: Bell, titre: "Rappels par e-mail", texte: "Le lien au moment du tirage, puis un rappel une semaine avant et la veille de l'échange." },
   { icone: Smartphone, titre: "Sur téléphone", texte: "S'installe sur l'écran d'accueil depuis le navigateur, sans passer par un store." },
   { icone: Cake, titre: "Listes d'anniversaire", texte: "Hors Secret Santa aussi : une liste à partager pour un anniversaire, une naissance, un mariage." },
-  { icone: ShieldCheck, titre: "Gratuit, sans compte", texte: "Pas d'inscription, pas de mot de passe, pas de publicité. Chacun garde simplement son lien." },
+  { icone: ShieldCheck, titre: "Gratuit, sans compte obligatoire", texte: "Pas d'inscription, pas de mot de passe, pas de publicité. Chacun garde son lien ; un compte facultatif rassemble tout sur vos appareils." },
 ];
 
 const QUESTIONS = [
@@ -118,6 +118,8 @@ export default function Accueil() {
             <p className="mt-2 text-sm text-doux">
               Vous avez reçu un lien ? Ouvrez-le simplement. Perdu ?{" "}
               <Link href="/retrouver" className="underline">Retrouver mes liens</Link>
+              {" · "}
+              <Link href="/compte" className="underline">Mon espace</Link>
             </p>
           </div>
           <div aria-hidden className="carte mx-auto w-full max-w-sm rotate-1 !p-0 overflow-hidden shadow-sm">

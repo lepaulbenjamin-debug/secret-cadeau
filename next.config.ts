@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
         { key: "Service-Worker-Allowed", value: "/" },
       ],
     };
-    return [serviceWorker, ...["/p", "/g", "/rejoindre", "/liste", "/ma-liste"].map((prefixe) => ({
+    return [serviceWorker, ...["/p", "/g", "/rejoindre", "/liste", "/ma-liste", "/compte", "/connexion"].map((prefixe) => ({
       source: `${prefixe}/:path*`,
       headers: [
         { key: "X-Robots-Tag", value: "noindex, nofollow" },

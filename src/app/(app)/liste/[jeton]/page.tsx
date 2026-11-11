@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { IdeesPartagees } from "@/components/idees-partagees";
+import { compteCourant } from "@/lib/compte/session";
 import { LienListeExterne } from "@/components/lien-liste-externe";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { lienAffiche } from "@/lib/affiliation";
@@ -21,17 +22,21 @@ export default async function ListePartagee({ params }: { params: Promise<{ jeto
     include: {
       idees: {
         orderBy: { creeLe: "asc" },
-        select: { id: true, titre: true, lien: true, image: true, prix: true, note: true, reservePar: true },
+        select: { id: true, titre: true, lien: true, image: true, prix: true, note: true, reservePar: true, reserveCompteId: true },
       },
     },
   });
   if (!liste) notFound();
+  const moi = await compteCourant();
+  // La personne fêtée, connectée : les réservations ne quittent même pas le serveur.
+  const proprioConnecte = Boolean(moi && (liste.compteId === moi.id || (liste.emailProprio && liste.emailProprio.toLowerCase() === moi.email)));
+  const duCompte = moi ? liste.idees.filter((i) => i.reserveCompteId === moi.id).map((i) => i.id) : [];
 
   const titre = titreListe(liste);
   const rebours = liste.date ? compteARebours(liste.date) : null;
   const idees = liste.idees.map((i) => {
     const l = i.lien ? lienAffiche(i.lien) : { url: "", affilie: false };
-    return { id: i.id, titre: i.titre, url: l.url, affilie: l.affilie, domaine: i.lien ? domaine(i.lien) : "", image: i.image, prix: i.prix, note: i.note, reservePar: i.reservePar };
+    return { id: i.id, titre: i.titre, url: l.url, affilie: l.affilie, domaine: i.lien ? domaine(i.lien) : "", image: i.image, prix: i.prix, note: i.note, reservePar: proprioConnecte ? "" : i.reservePar };
   });
   const libres = idees.filter((i) => !i.reservePar).length;
 
@@ -56,7 +61,7 @@ export default async function ListePartagee({ params }: { params: Promise<{ jeto
             : `Touchez « Je m'en occupe » sur le cadeau que vous offrez : ${liste.prenom} ne le saura pas, et les autres éviteront le doublon.`}
         </p>
         <LienListeExterne lien={liste.listeExterne} />
-        {idees.length > 0 && <IdeesPartagees jetonPartage={jeton} idees={idees} />}
+        {idees.length > 0 && <IdeesPartagees jetonPartage={jeton} idees={idees} duCompte={duCompte} proprioConnecte={proprioConnecte} />}
         {idees.length > 0 && libres === 0 && <p className="mt-3 text-sm font-medium text-sapin">Toutes les idées sont réservées 🎉</p>}
       </section>
 

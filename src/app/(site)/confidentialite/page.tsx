@@ -42,6 +42,7 @@ export default function Confidentialite() {
           <tr><td>Listes d&apos;anniversaire : prénom, occasion, date, idées, e-mail (facultatif)</td><td>Partager la liste, vous envoyer vos liens</td><td>Les personnes qui ont le lien de la liste (l&apos;e-mail : personne)</td></tr>
           <tr><td>Réservations sur une liste : prénom du proche</td><td>Éviter les doublons</td><td>Les autres proches, jamais la personne fêtée</td></tr>
           <tr><td>Abonnement aux notifications (adresse technique fournie par le navigateur)</td><td>Vous envoyer les notifications que vous avez activées</td><td>Personne ; effacé quand vous les désactivez</td></tr>
+          <tr><td>Compte (facultatif) : adresse e-mail, prénom fourni par Google le cas échéant</td><td>Vous connecter, rassembler vos groupes, listes et réservations dans « Mon espace »</td><td>Personne</td></tr>
           <tr><td>Résultat du tirage</td><td>Vous dire à qui vous offrez</td><td>Vous seul</td></tr>
           <tr><td>Listes d&apos;envies, réservations, questions anonymes</td><td>Le fonctionnement du jeu</td><td>Le groupe (réservations cachées au propriétaire de la liste, auteur des questions caché)</td></tr>
         </tbody>
@@ -55,15 +56,17 @@ export default function Confidentialite() {
       <h2>Sur votre appareil</h2>
       <p>
         Pour retrouver vos groupes sans compte, Qui Offre garde sur votre appareil (stockage local du navigateur) la liste
-        des liens que vous avez ouverts. Elle n&apos;est jamais envoyée à nos serveurs. Le site n&apos;utilise aucun cookie de
-        mesure d&apos;audience ni de publicité.
+        des liens que vous avez ouverts. Elle n&apos;est jamais envoyée à nos serveurs. Si vous vous connectez, un cookie de session
+        (strictement nécessaire, 90 jours) vous garde connecté ; la déconnexion l&apos;efface. Le site n&apos;utilise aucun
+        cookie de mesure d&apos;audience ni de publicité.
       </p>
 
       <h2>Nos prestataires</h2>
       <ul>
         <li>Vercel : hébergement du site.</li>
         <li>Neon : hébergement de la base de données, dans l&apos;Union européenne (Francfort).</li>
-        <li>Resend : envoi des e-mails de rappel.</li>
+        <li>Resend : envoi des e-mails de rappel et de connexion.</li>
+        <li>Google : uniquement si vous choisissez « Continuer avec Google » (nous ne recevons que votre adresse et votre prénom).</li>
       </ul>
       <p>
         Lorsque vous suivez un lien vers une boutique (Amazon ou autre), vous quittez Qui Offre : c&apos;est alors la politique
@@ -74,7 +77,8 @@ export default function Confidentialite() {
       <p>
         Les données d&apos;un groupe sont conservées tant que le groupe existe. L&apos;organisateur peut retirer un participant
         (ses données et sa liste sont alors effacées) ou supprimer le groupe entier depuis sa page : tout est alors effacé
-        définitivement. Vous pouvez aussi nous demander la suppression d&apos;un groupe ou de vos données.
+        définitivement. Vous pouvez aussi nous demander la suppression d&apos;un groupe ou de vos données. Un compte se supprime depuis « Mon
+        espace » : vos groupes et listes restent alors accessibles par leurs liens.
       </p>
 
       <h2>Vos droits</h2>

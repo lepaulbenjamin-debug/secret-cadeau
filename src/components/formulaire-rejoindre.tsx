@@ -145,6 +145,7 @@ export function FormulaireRejoindre({ jetonInvitation, groupe }: { jetonInvitati
           )}
           <div>
             <label className="etiquette" htmlFor="prenom">{pourAutre ? "Son prénom" : "Votre prénom"}</label>
+            <input type="hidden" name="pourAutre" value={pourAutre ? "1" : ""} />
             <input id="prenom" name="prenom" className="champ" required maxLength={40} autoComplete={pourAutre ? "off" : "given-name"} placeholder={pourAutre ? "Léo" : "Léa"} />
           </div>
           <div>

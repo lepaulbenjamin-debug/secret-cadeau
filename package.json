@@ -8,7 +8,7 @@
     "build:local": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test src/lib/*.test.ts scripts/*.test.mjs",
+    "test": "tsx --test src/lib/*.test.ts src/lib/compte/*.test.ts scripts/*.test.mjs",
     "db:migrate": "prisma migrate dev",
     "postinstall": "prisma generate",
     "android-marque": "node scripts/android-marque.mjs",

@@ -58,8 +58,21 @@ const VIDE: string[] = [];
  * liste), les réservations sont masquées : elle peut regarder la page partagée
  * sans gâcher sa surprise.
  */
-export function IdeesPartagees({ jetonPartage, idees }: { jetonPartage: string; idees: IdeePartagee[] }) {
-  const proprio = useSyncExternalStore(() => () => {}, () => estProprioDe(jetonPartage), () => false);
+export function IdeesPartagees({
+  jetonPartage,
+  idees,
+  duCompte = VIDE,
+  proprioConnecte = false,
+}: {
+  jetonPartage: string;
+  idees: IdeePartagee[];
+  /** Les idées réservées par le compte connecté (depuis n'importe quel appareil). */
+  duCompte?: string[];
+  /** La personne fêtée, reconnue par son compte : le serveur n'a même pas envoyé les réservations. */
+  proprioConnecte?: boolean;
+}) {
+  const proprioAppareil = useSyncExternalStore(() => () => {}, () => estProprioDe(jetonPartage), () => false);
+  const proprio = proprioConnecte || proprioAppareil;
   const miennes = useSyncExternalStore(abonner, miennesInstantane, () => VIDE);
   const [demande, setDemande] = useState<string | null>(null);
   const [prenom, setPrenom] = useState("");
@@ -93,7 +106,7 @@ export function IdeesPartagees({ jetonPartage, idees }: { jetonPartage: string; 
       <ul className="divide-y divide-trait">
         {idees.map((s) => {
           const reservee = !proprio && Boolean(s.reservePar);
-          const parMoi = reservee && miennes.includes(s.id);
+          const parMoi = reservee && (miennes.includes(s.id) || duCompte.includes(s.id));
           return (
             <li key={s.id} className="py-3">
               <div className="flex items-start gap-3">

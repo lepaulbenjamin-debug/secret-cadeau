@@ -22,6 +22,7 @@ import { ImportListe } from "@/components/import-liste";
 import { InstallerApp } from "@/components/installer-app";
 import { LienListeExterne } from "@/components/lien-liste-externe";
 import { Revelation } from "@/components/revelation";
+import { RattacherCompte } from "@/components/rattacher-compte";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { Souhait, type SouhaitAffiche } from "@/components/souhait";
 import { assurerNomsDeCode, nomVisible, participantOu404 } from "@/lib/acces";
@@ -116,6 +117,8 @@ export default async function EspacePerso({
         </div>
         {groupe.message && <p className="carte mt-4 !py-3 text-sm italic">« {groupe.message} »</p>}
       </header>
+
+      <RattacherCompte sorte="perso" jeton={jeton} compteId={moi.compteId} email={moi.email} chemin={`/p/${jeton}`} />
 
       {anonyme && (
         <section className="carte text-center">

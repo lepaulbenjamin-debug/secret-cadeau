@@ -1,6 +1,6 @@
 # Publier Qui Offre sur le Play Store
 
-Même chemin que Petsitia, en plus simple : pas de compte à créer dans l'application
+Même chemin que Petsitia, en plus simple : le compte est facultatif et sans mot de passe
 (donc pas de compte de test à fournir à Google), pas de notifications natives (donc
 pas de Firebase). Le bundle se construit dans GitHub Actions, sans Android Studio.
 
@@ -153,7 +153,7 @@ En famille, entre amis ou entre collègues : Qui Offre s'occupe du tirage, vous 
 | --- | --- |
 | **Politique de confidentialité** | `https://www.quioffre.fr/confidentialite` |
 | **Annonces** | **Non**, l'application ne contient pas d'annonces |
-| **Accès à l'application** | **Toutes les fonctionnalités sont disponibles sans accès spécial** (aucun compte) |
+| **Accès à l'application** | **Toutes les fonctionnalités sont disponibles sans accès spécial** (le compte est facultatif : connexion par e-mail, sans mot de passe) |
 | **Public cible** | **18 ans et plus** ; ne s'adresse pas aux enfants (les groupes sont créés par des adultes) |
 | **Applications d'actualités, COVID-19, gouvernementales** | Non |
 | **Fonctionnalités financières** | Aucune |
@@ -180,6 +180,9 @@ Cohérent avec `https://www.quioffre.fr/confidentialite`.
 
 - **Collecte ou partage de données ?** Oui (collecte uniquement).
 - **Chiffrées en transit ?** Oui (HTTPS uniquement).
+- **Suppression du compte** (exigée dès qu'on peut créer un compte) : dans l'application,
+  *Mon espace* → « Supprimer mon compte ». URL à déclarer : `https://www.quioffre.fr/compte`
+  (après connexion, même bouton), ou demande à `contact@creawebconseil.fr`.
 - **Moyen de demander la suppression ?** Oui : l'organisateur supprime le groupe ou un
   participant depuis sa page ; la personne fêtée supprime sa liste ; et sur demande à
   `contact@creawebconseil.fr`. URL : `https://www.quioffre.fr/confidentialite`.
@@ -191,7 +194,7 @@ traitent pour notre compte ne comptent pas comme un partage), finalité
 | Catégorie Play | Type | Obligatoire ? | Pourquoi |
 | --- | --- | --- | --- |
 | Informations personnelles | Nom | Oui | le prénom, pour le tirage et les listes |
-| Informations personnelles | Adresse e-mail | Non (facultative) | envoyer les liens et les rappels |
+| Informations personnelles | Adresse e-mail | Non (facultative) | envoyer les liens et les rappels ; compte facultatif |
 | Informations personnelles | Numéro de téléphone | Non (facultatif) | permettre à l'organisateur d'envoyer le lien par SMS |
 | Messages | Autres messages dans l'application | Oui | questions anonymes et leurs réponses |
 | Contenus générés par l'utilisateur | Autres contenus | Oui | idées de cadeaux des listes |

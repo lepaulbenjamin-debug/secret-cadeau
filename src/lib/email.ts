@@ -23,7 +23,8 @@ export async function envoyerEmail(e: Email, fetcher: typeof fetch = fetch): Pro
   if (!cle) return { ok: false, motif: "RESEND_API_KEY absente" };
   const de = process.env.EMAIL_EXPEDITEUR ?? "Qui Offre <rappels@quioffre.fr>";
 
-  const r = await fetcher("https://api.resend.com/emails", {
+  // RESEND_API_URL : seulement pour les essais locaux (un faux Resend qui capture les messages).
+  const r = await fetcher(process.env.RESEND_API_URL ?? "https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${cle}`, "content-type": "application/json" },
     signal: AbortSignal.timeout(10000),

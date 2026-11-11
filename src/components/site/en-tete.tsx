@@ -1,3 +1,4 @@
+import { UserRound } from "lucide-react";
 import Link from "next/link";
 
 const MENU = [
@@ -22,7 +23,11 @@ export function EnTeteSite() {
             <Link key={m.href} href={m.href} className="hover:text-sapin">{m.libelle}</Link>
           ))}
         </nav>
-        <Link href="/nouveau" className="bouton bouton-cerise ml-auto !min-h-9 text-sm sm:ml-0">Organiser</Link>
+        {/* Un simple lien : l'en-tête reste statique (pages du site pré-rendues). /compte renvoie vers la connexion au besoin. */}
+        <Link href="/compte" className="ml-auto inline-flex items-center gap-1.5 text-sm font-medium hover:text-sapin sm:ml-0" aria-label="Mon espace">
+          <UserRound size={18} aria-hidden /> <span className="hidden sm:inline">Mon espace</span>
+        </Link>
+        <Link href="/nouveau" className="bouton bouton-cerise !min-h-9 text-sm">Organiser</Link>
       </div>
     </header>
   );

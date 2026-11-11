@@ -6,6 +6,7 @@ import { after } from "next/server";
 import { groupeParJetonAdmin, participantParJeton } from "@/lib/acces";
 import { deplierLienCourt } from "@/lib/affiliation";
 import { apercuDuLien, type Apercu } from "@/lib/apercu";
+import { compteCourant } from "@/lib/compte/session";
 import { lienSur, lirePrenoms } from "@/lib/format";
 import { nouveauJeton } from "@/lib/jeton";
 import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
@@ -57,6 +58,8 @@ export async function creerGroupe(_: unknown, f: FormData): Promise<GroupeCree> 
   if (prenoms.length > MAX_PARTICIPANTS) return { erreur: `${MAX_PARTICIPANTS} participants au maximum.` };
 
   const noms = nomsDeCodeAleatoires(prenoms.length);
+  // Connecté : le groupe (et son espace de participant) arrive dans « Mon espace ».
+  const compte = await compteCourant();
   const groupe = await prisma.groupe.create({
     data: {
       nom,
@@ -65,6 +68,7 @@ export async function creerGroupe(_: unknown, f: FormData): Promise<GroupeCree> 
       message: texte(f, "message", 500),
       nomsDeCode: f.get("nomsDeCode") === "on",
       emailOrganisateur: email,
+      compteOrganisateurId: compte?.id,
       jetonAdmin: nouveauJeton(),
       jetonInvitation: nouveauJeton(),
       participants: {
@@ -74,6 +78,7 @@ export async function creerGroupe(_: unknown, f: FormData): Promise<GroupeCree> 
           nomDeCode: noms[i],
           jeton: nouveauJeton(),
           email: participe && i === 0 ? email : "",
+          compteId: participe && i === 0 ? compte?.id : undefined,
         })),
       },
     },
@@ -384,6 +389,8 @@ export async function rejoindreGroupe(jetonInvitation: string, _: unknown, f: Fo
       nomDeCode: nomDeCodeAleatoire(groupe.participants.map((x) => x.nomDeCode)),
       jeton: nouveauJeton(),
       ...coordonnees,
+      // Inscrit pour soi en étant connecté : l'espace arrive dans « Mon espace » (pas celui d'un enfant).
+      compteId: f.get("pourAutre") ? undefined : (await compteCourant())?.id,
     },
   });
   revalidatePath("/", "layout");

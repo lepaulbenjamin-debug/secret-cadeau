@@ -111,6 +111,33 @@ n'apparaît pas ; l'installation, elle, reste proposée.
 ⚠️ Ne régénérez pas ces clés plus tard : tous les abonnements existants cesseraient
 de recevoir quoi que ce soit.
 
+## 5 ter. Les comptes : connexion avec Google (facultatif)
+
+Les comptes sont facultatifs : les liens marchent sans. La connexion par e-mail (lien
++ code à 6 chiffres) marche dès que Resend est configuré (§ 5). Pour ajouter le
+bouton « Continuer avec Google » :
+
+1. https://console.cloud.google.com → créer un projet « Qui Offre » (pas celui de Petsitia).
+2. *API et services* → **Écran de consentement OAuth** : type **Externe** ; nom
+   « Qui Offre » ; e-mail d'assistance `contact@creawebconseil.fr` ; logo
+   `public/icon-512.png` (facultatif) ; domaine autorisé `quioffre.fr` ; liens
+   `https://www.quioffre.fr`, `https://www.quioffre.fr/confidentialite`,
+   `https://www.quioffre.fr/mentions-legales`. Champs d'application : `openid`,
+   `email`, `profile` uniquement (pas de validation Google nécessaire). Puis
+   **Publier l'application** (sinon seuls les testeurs déclarés peuvent se connecter).
+3. *Identifiants* → **Créer des identifiants** → **ID client OAuth** → type
+   **Application Web** :
+   - Origines JavaScript autorisées : `https://www.quioffre.fr`
+   - URI de redirection autorisés : `https://www.quioffre.fr/api/connexion/google/retour`
+4. Vercel → *Settings* → *Environment Variables* (Production) :
+   - `GOOGLE_CLIENT_ID` = l'ID client ;
+   - `GOOGLE_CLIENT_SECRET` = le code secret (ne le collez nulle part ailleurs).
+5. **Redeploy**. Le bouton apparaît sur `/connexion` (jamais dans l'application des
+   stores : Google y interdit la connexion).
+
+Les tables `Compte`, `Session` et `JetonConnexion` se créent avec la migration
+`20261111090000_comptes`, appliquée automatiquement au déploiement.
+
 ## 6. Le référencement
 
 1. **Google Search Console** (<https://search.google.com/search-console>) : ajoutez la propriété

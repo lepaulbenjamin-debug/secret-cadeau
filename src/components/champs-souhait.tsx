@@ -4,6 +4,7 @@ import { Loader2, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { apercuLien } from "@/app/actions";
+import { prixSaisi } from "@/lib/format";
 
 type Valeurs = { titre?: string; lien?: string; prix?: number | null; note?: string; image?: string };
 
@@ -50,7 +51,7 @@ export function ChampsSouhait({ v = {}, id, jeton }: { v?: Valeurs; id: string; 
           rempli.push("le titre");
         }
         if (a.prix && prix.current && !prix.current.value.trim()) {
-          prix.current.value = String(a.prix);
+          prix.current.value = prixSaisi(a.prix);
           rempli.push("le prix");
         }
         if (a.image) {
@@ -109,7 +110,7 @@ export function ChampsSouhait({ v = {}, id, jeton }: { v?: Valeurs; id: string; 
       <div className="grid grid-cols-[6rem_1fr] gap-3">
         <div>
           <label className="etiquette" htmlFor={`prix-${id}`}>Prix (€)</label>
-          <input ref={prix} id={`prix-${id}`} name="prix" className="champ" defaultValue={v.prix ?? ""} inputMode="numeric" placeholder="25" />
+          <input ref={prix} id={`prix-${id}`} name="prix" className="champ" defaultValue={prixSaisi(v.prix)} inputMode="decimal" placeholder="24,99" />
         </div>
         <div>
           <label className="etiquette" htmlFor={`note-${id}`}>Précision <span className="font-normal text-doux">(taille, couleur…)</span></label>

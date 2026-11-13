@@ -20,7 +20,7 @@ import {
   type IdeeImportee,
 } from "@/lib/import-liste";
 import { prisma } from "@/lib/prisma";
-import { entierPositif, imageSure } from "@/lib/saisie";
+import { imageSure, prixPositif } from "@/lib/saisie";
 
 /**
  * Importer une liste tenue ailleurs, et « Ma liste ailleurs ».
@@ -147,7 +147,7 @@ export async function importerIdees(jeton: string, choisies: IdeeImportee[]): Pr
       titre: String(i?.titre ?? "").trim().slice(0, 120),
       lien: lienSur(String(i?.lien ?? "").slice(0, 1000)),
       image: imageSure(String(i?.image ?? "").slice(0, 1000)),
-      prix: typeof i?.prix === "number" ? entierPositif(String(Math.round(i.prix))) : null,
+      prix: typeof i?.prix === "number" ? prixPositif(String(i.prix)) : null,
       note: "",
     }))
     .filter((i) => i.titre);

@@ -5,7 +5,8 @@
  * pages : les informations produit — et surtout les prix — doivent venir de son
  * API officielle. On se contente donc du titre écrit dans l'adresse elle-même
  * (`amazon.fr/Livre-Recettes-Italiennes/dp/…`), sans aucune requête chez Amazon.
- * L'image et le prix viendront de l'API Partenaires le jour où elle sera ouverte.
+ * Quand l'API officielle est configurée (`amazon-api.ts`), titre, image et prix
+ * viennent d'elle.
  *
  * Pour les autres sites, on lit les métadonnées de partage que la page publie
  * elle-même pour les réseaux sociaux (Open Graph, JSON-LD) : ce qu'un aperçu
@@ -14,6 +15,7 @@
  */
 
 import { boutiqueAmazon } from "./affiliation";
+import { infosAmazon } from "./amazon-api";
 
 export type Apercu = { titre: string; image: string; prix: number | null };
 
@@ -87,13 +89,13 @@ function premiereChaine(v: unknown): string {
 
 /** « 29,99 € », « 1 299.00 », 29.99 → euros entiers arrondis. */
 export function lirePrix(v: unknown): number | null {
-  if (typeof v === "number") return Number.isFinite(v) && v > 0 ? Math.round(v) : null;
+  if (typeof v === "number") return Number.isFinite(v) && v > 0 && v < 1_000_000 ? Math.round(v * 100) / 100 : null;
   if (typeof v !== "string") return null;
   const nettoye = v.replace(/[^\d,.]/g, "");
   // Une virgule suivie de 1-2 chiffres en fin de chaîne est un séparateur décimal.
   const normalise = /,\d{1,2}$/.test(nettoye) ? nettoye.replace(/\./g, "").replace(",", ".") : nettoye.replace(/,/g, "");
   const n = Number.parseFloat(normalise);
-  return Number.isFinite(n) && n > 0 && n < 1_000_000 ? Math.round(n) : null;
+  return Number.isFinite(n) && n > 0 && n < 1_000_000 ? Math.round(n * 100) / 100 : null;
 }
 
 function prixJsonLd(produit: Noeud): number | null {
@@ -293,7 +295,10 @@ export async function apercuDuLien(
   const deLAdresse = { ...VIDE, titre: titreDepuisAdresse(lien) };
   const page = await recupererPage(lien, options);
   // Amazon (jamais lu, voir en tête de fichier) : le titre de l'adresse atteinte.
-  if (page && "amazon" in page) return { ...VIDE, titre: titreDepuisAdresse(page.amazon) || deLAdresse.titre };
+  if (page && "amazon" in page) {
+    const api = await infosAmazon(page.amazon, process.env, options.fetcher);
+    return api ?? { ...VIDE, titre: titreDepuisAdresse(page.amazon) || deLAdresse.titre };
+  }
   if (!page) return deLAdresse;
   const lu = extraireApercu(page.html, page.url);
   return { titre: lu.titre || deLAdresse.titre, image: lu.image, prix: lu.prix };

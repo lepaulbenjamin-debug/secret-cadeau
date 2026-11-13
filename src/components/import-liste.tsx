@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { enregistrerListeExterne, importerIdees, previsualiserImport } from "@/app/actions-import";
 import type { IdeeImportee } from "@/lib/import-liste";
+import { euros } from "@/lib/format";
 
 /**
  * « Votre liste existe déjà ailleurs ? » : enregistrer son lien, et/ou en importer
@@ -126,7 +127,7 @@ export function ImportListe({ jeton, listeExterne, mystere = false }: { jeton: s
                         </span>
                       )}
                     </span>
-                    {i.prix != null && <span className="shrink-0 text-xs font-semibold">{i.prix} €</span>}
+                    {i.prix != null && <span className="shrink-0 text-xs font-semibold">{euros(i.prix)}</span>}
                   </label>
                 </li>
               ))}

@@ -19,9 +19,14 @@ export function compteARebours(d: Date, maintenant = new Date()): string | null 
   return `dans ${n} jours`;
 }
 
+/** « 25 € », « 12,99 € », « 1 299,90 € » : les centimes seulement s'il y en a. */
 export function euros(n: number): string {
-  return `${n} €`;
+  const entier = Number.isInteger(n);
+  return `${n.toLocaleString("fr-FR", { minimumFractionDigits: entier ? 0 : 2, maximumFractionDigits: 2 }).replace(/[\u202f\u00a0]/g, "\u00a0")}\u00a0€`;
 }
+
+/** Le prix tel qu'on le remet dans un champ : « 12,99 ». */
+export const prixSaisi = (n: number | null | undefined) => (n == null ? "" : String(n).replace(".", ","));
 
 /** Les prénoms saisis un par ligne (ou séparés par des virgules), nettoyés et dédoublonnés. */
 export function lirePrenoms(texte: string): string[] {

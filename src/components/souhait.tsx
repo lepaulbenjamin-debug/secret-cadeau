@@ -2,6 +2,7 @@ import { ExternalLink } from "lucide-react";
 
 import { lienAffiche } from "@/lib/affiliation";
 import { domaine } from "@/lib/format";
+import { euros } from "@/lib/format";
 
 export type SouhaitAffiche = { id: string; titre: string; lien: string; image: string; prix: number | null; note: string };
 
@@ -25,7 +26,7 @@ export function Souhait({ s, pied, barre = false }: { s: SouhaitAffiche; pied?: 
             </a>
           )}
         </div>
-        {s.prix != null && <span className="shrink-0 rounded-full bg-creme px-2.5 py-0.5 text-sm font-semibold">{s.prix} €</span>}
+        {s.prix != null && <span className="shrink-0 rounded-full bg-creme px-2.5 py-0.5 text-sm font-semibold">{euros(s.prix)}</span>}
       </div>
       {pied && <div className="mt-2">{pied}</div>}
     </li>

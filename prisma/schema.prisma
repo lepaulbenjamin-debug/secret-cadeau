@@ -108,7 +108,8 @@ model Souhait {
   /// Image du produit (https), trouvée en collant le lien ou laissée vide.
   image         String       @default("")
   /// En euros, facultatif.
-  prix          Int?
+  /// En euros, centimes compris (12,99).
+  prix          Float?
   note          String       @default("")
   /// Réservé par quelqu'un pour éviter les doublons. JAMAIS montré au propriétaire.
   reserveParId  String?
@@ -177,7 +178,8 @@ model IdeeListe {
   titre     String
   lien      String   @default("")
   image     String   @default("")
-  prix      Int?
+  /// En euros, centimes compris (12,99).
+  prix      Float?
   note      String   @default("")
   /// Réservation par un proche : son prénom (montré aux autres proches, JAMAIS à la
   /// personne fêtée) et le jeton de son appareil (pour qu'il puisse annuler).

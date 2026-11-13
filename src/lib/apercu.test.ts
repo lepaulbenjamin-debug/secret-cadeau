@@ -12,7 +12,7 @@ test("Open Graph", () => {
   assert.deepEqual(extraireApercu(html, "https://www.decathlon.fr/p/xt5"), {
     titre: "Chaussures de trail XT-5",
     image: "https://cdn.example.com/xt5.jpg",
-    prix: 90,
+    prix: 89.99,
   });
 });
 
@@ -22,7 +22,7 @@ test("JSON-LD Product prioritaire, dans un @graph, entités décodées", () => {
     <meta property="og:title" content="Mauvais titre">`;
   const a = extraireApercu(html, "https://shop.fr/theiere");
   assert.equal(a.image, "https://shop.fr/t.jpg");
-  assert.equal(a.prix, 35);
+  assert.equal(a.prix, 34.5);
 });
 
 test("titre seul via <title>, apostrophes encodées", () => {
@@ -30,10 +30,10 @@ test("titre seul via <title>, apostrophes encodées", () => {
 });
 
 test("prix", () => {
-  assert.equal(lirePrix("29,99 €"), 30);
+  assert.equal(lirePrix("29,99 €"), 29.99);
   assert.equal(lirePrix("1 299,00"), 1299);
   assert.equal(lirePrix("1,299.00"), 1299);
-  assert.equal(lirePrix(12.4), 12);
+  assert.equal(lirePrix(12.4), 12.4);
   assert.equal(lirePrix("gratuit"), null);
 });
 

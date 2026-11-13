@@ -12,6 +12,15 @@ export function entierPositif(brut: string): number | null {
   return Number.isFinite(n) && n > 0 ? Math.min(n, 100000) : null;
 }
 
+/** Un prix en euros, centimes compris : « 12,99 », « 12.99 », « 1 299,90 € ». `null` si vide ou absurde. */
+export function prixPositif(brut: string): number | null {
+  const nettoye = brut.replace(/[^\d,.]/g, "");
+  // La dernière virgule ou le dernier point suivi d'un ou deux chiffres sépare les centimes.
+  const m = nettoye.match(/^(.*?)[,.](\d{1,2})$/);
+  const n = m ? Number(`${m[1].replace(/[,.]/g, "") || "0"}.${m[2]}`) : Number(nettoye.replace(/[,.]/g, ""));
+  return Number.isFinite(n) && n > 0 ? Math.min(Math.round(n * 100) / 100, 100000) : null;
+}
+
 export const EMAIL_VALIDE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /** Un e-mail facultatif : vide, ou valide. `null` = invalide. */
@@ -39,7 +48,7 @@ export async function lireIdee(f: FormData) {
     titre: texte(f, "titre", 120),
     // Un lien court Amazon (amzn.eu/…) est déplié : sinon il ne peut pas porter notre identifiant.
     lien: await deplierLienCourt(lienSur(texte(f, "lien", 1000))),
-    prix: entierPositif(texte(f, "prix", 10)),
+    prix: prixPositif(texte(f, "prix", 15)),
     note: texte(f, "note", 300),
   };
 }

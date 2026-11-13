@@ -83,8 +83,8 @@ export default async function EspacePerso({
   const destinataire = autres.find((p) => p.id === moi.destinataireId) ?? null;
   // En mode mystère, les autres ne sont que des noms de code — triés comme tels,
   // pour que l'ordre alphabétique des vrais prénoms ne trahisse rien.
-  const restants = autres
-    .filter((p) => p.id !== moi.destinataireId)
+  // Tout le groupe, y compris la personne tirée (marquée « vous lui offrez », pour moi seul).
+  const restants = [...autres]
     .sort((a, b) => nomVisible(a, anonyme).localeCompare(nomVisible(b, anonyme), "fr"));
   const rebours = groupe.dateEchange ? compteARebours(groupe.dateEchange) : null;
 
@@ -320,12 +320,15 @@ export default async function EspacePerso({
       {restants.length > 0 && (
         <section className="carte">
           <h2 className="flex items-center gap-2 font-titre text-xl font-semibold"><Users size={20} /> Les listes du groupe</h2>
-          <p className="mt-1 text-sm text-doux">Pour un cadeau en plus, ou pour piocher des idées.</p>
+          <p className="mt-1 text-sm text-doux">Les listes de tout le groupe : pour un cadeau en plus, ou pour piocher des idées.</p>
           <div className="mt-3 divide-y divide-trait">
             {restants.map((p) => (
               <details key={p.id} className="py-2">
                 <summary className="cursor-pointer py-1 font-semibold">
                   {nomVisible(p, anonyme)} <span className="font-normal text-doux">· {p.souhaits.length} idée{p.souhaits.length > 1 ? "s" : ""}</span>
+                  {p.id === moi.destinataireId && (
+                    <span className="ml-2 inline-block rounded-full bg-cerise px-2 py-0.5 align-middle text-xs font-semibold text-carte">🎁 Vous lui offrez</span>
+                  )}
                 </summary>
                 {!anonyme && p.listeExterne && <div className="pb-2"><LienListeExterne lien={p.listeExterne} /></div>}
                 {p.souhaits.length ? (

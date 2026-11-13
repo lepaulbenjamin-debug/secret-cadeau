@@ -6,6 +6,7 @@ import { useState, useSyncExternalStore, useTransition } from "react";
 import { annulerReservation, reserverIdee } from "@/app/actions-listes";
 
 import { estProprioDe, jetonAppareil } from "./memoire";
+import { euros } from "@/lib/format";
 
 export type IdeePartagee = {
   id: string;
@@ -123,7 +124,7 @@ export function IdeesPartagees({
                     </a>
                   )}
                 </div>
-                {s.prix != null && <span className="shrink-0 rounded-full bg-creme px-2.5 py-0.5 text-sm font-semibold">{s.prix} €</span>}
+                {s.prix != null && <span className="shrink-0 rounded-full bg-creme px-2.5 py-0.5 text-sm font-semibold">{euros(s.prix)}</span>}
               </div>
               {!proprio && (
                 <div className="mt-2">

@@ -50,10 +50,19 @@ export function estLienCourtAmazon(lien: string): boolean {
   }
 }
 
-function identifiant(boutique: string, env: Env): string | null {
+export function identifiant(boutique: string, env: Env = process.env): string | null {
   const v = env[`AMAZON_TAG_${boutique.toUpperCase().replace(/\./g, "_")}`]?.trim();
   // Un identifiant Partenaires : lettres, chiffres, tirets (ex. « quioffre-21 »).
   return v && /^[\w-]{3,64}$/.test(v) ? v : null;
+}
+
+/** L'ASIN d'un lien Amazon, ou `null`. */
+export function asinDe(lien: string): string | null {
+  try {
+    return new URL(lien).pathname.match(ASIN)?.[1]?.toUpperCase() ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /** Y a-t-il au moins un identifiant configuré ? (pour afficher la mention obligatoire) */

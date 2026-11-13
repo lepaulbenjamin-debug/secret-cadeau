@@ -28,7 +28,7 @@ test("page : ItemList en JSON-LD", () => {
   const r = extraireListe(html, "https://listes.fr/lea");
   assert.equal(r.methode, "donnees");
   assert.deepEqual(r.idees, [
-    { titre: "Casque sans fil", lien: "https://listes.fr/p/1", image: "https://cdn.fr/1.jpg", prix: 60 },
+    { titre: "Casque sans fil", lien: "https://listes.fr/p/1", image: "https://cdn.fr/1.jpg", prix: 59.9 },
     { titre: "Thé vert", lien: "https://the.fr/vert", image: "", prix: 12 },
   ]);
 });
@@ -58,7 +58,7 @@ test("Listy : idées, images, prix, et le cadre des idées réservées", () => {
     <turbo-frame id="reserved_products" src="/listes/ma-liste/envies-reservees" target="_top"></turbo-frame>`;
   const idees = extraireListy(html, "https://www.listy.fr/listes/ma-liste");
   assert.deepEqual(idees, [
-    { titre: "LAMPE DISCO", lien: "https://www.listy.fr/envies/lampe-1", image: "https://images.listy.fr/store/lampe-1.webp", prix: 15 },
+    { titre: "LAMPE DISCO", lien: "https://www.listy.fr/envies/lampe-1", image: "https://images.listy.fr/store/lampe-1.webp", prix: 14.99 },
     { titre: "Thé vert", lien: "https://www.listy.fr/envies/the-2", image: "https://images.listy.fr/store/the-2.webp", prix: null },
   ]);
   assert.deepEqual(cadresListy(html, "https://www.listy.fr/listes/ma-liste"), ["https://www.listy.fr/listes/ma-liste/envies-reservees"]);

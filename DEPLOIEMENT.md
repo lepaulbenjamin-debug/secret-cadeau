@@ -63,6 +63,24 @@ La mention obligatoire « En tant que Partenaire Amazon, Qui Offre réalise un b
 sur les achats remplissant les conditions requises » s'affiche alors en bas de chaque page.
 Sans variable, rien ne change.
 
+### Remplissage automatique des liens Amazon (Creators API)
+
+Le contrat Partenaires interdit de lire les pages d'Amazon : titre, image et prix
+d'un lien Amazon ne peuvent venir que de son API officielle, la **Creators API**
+(qui remplace PA-API 5). Sans elle, seul le titre écrit dans l'adresse est repris.
+
+1. Partenaires Amazon → menu **Outils** → **Creators API** → *Create Application*,
+   puis *Create Credential*. Notez le **Credential ID**, le **Credential Secret**
+   (affiché une seule fois) et la **Version** (`3.2` pour la France).
+2. Vercel → *Environment Variables* (Production) :
+   - `AMAZON_CREATORS_ID` = le Credential ID ;
+   - `AMAZON_CREATORS_SECRET` = le Credential Secret ;
+   - `AMAZON_CREATORS_VERSION` = `3.2` (valeur par défaut, facultative).
+3. **Redeploy**. `AMAZON_TAG_FR` doit aussi être renseigné : l'API l'exige.
+
+Amazon n'ouvre l'API qu'aux comptes Partenaires validés, ayant généré des ventes
+récentes : tant qu'elle refuse, le site retombe sans bruit sur le titre de l'adresse.
+
 ⚠️ Revenus d'affiliation = usage commercial : l'offre gratuite de Vercel (Hobby) ne
 l'autorise pas, il faut passer à l'offre Pro.
 

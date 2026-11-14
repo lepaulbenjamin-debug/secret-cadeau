@@ -58,6 +58,8 @@ model Participant {
   /// Lien d'une liste tenue ailleurs (Amazon, autre site), montré aux autres participants.
   listeExterne String  @default("")
   /// Compte de la personne (facultatif) : son espace apparaît dans « Mon espace ».
+  /// Dernière notification « nouvelle idée » reçue (une toutes les 30 minutes au plus).
+  ideeSignaleeLe DateTime?
   compteId     String?
   compte       Compte? @relation(fields: [compteId], references: [id], onDelete: SetNull)
   /// Rappels par e-mail (tirage fait, J-7, veille). Coupés en un clic depuis l'e-mail.

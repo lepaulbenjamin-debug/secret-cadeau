@@ -17,6 +17,16 @@ export function messageAjustement(groupe: string, jeton: string): MessagePush {
   return { titre: `🔄 ${groupe}`, corps: "Votre tirage a changé : ouvrez le paquet pour découvrir à qui vous offrez maintenant.", url: `/p/${jeton}`, etiquette: `ajustement-${jeton}` };
 }
 
+/** Une nouvelle idée chez la personne tirée. Sans son nom : l'écran verrouillé est visible de tous. */
+export function messageNouvelleIdee(groupe: string, jeton: string, nombre: number): MessagePush {
+  return {
+    titre: `🎁 ${groupe}`,
+    corps: nombre > 1 ? "Des nouvelles idées dans la liste de la personne que vous avez tirée." : "Une nouvelle idée dans la liste de la personne que vous avez tirée.",
+    url: `/p/${jeton}`,
+    etiquette: `idee-${jeton}`,
+  };
+}
+
 export function messageQuestion(groupe: string, jeton: string): MessagePush {
   return { titre: `🤫 ${groupe}`, corps: "Votre Père Noël secret vous a posé une question.", url: `/p/${jeton}`, etiquette: `question-${jeton}` };
 }

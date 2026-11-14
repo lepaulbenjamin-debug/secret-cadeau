@@ -13,7 +13,7 @@ import { nomDeCodeAleatoire, nomsDeCodeAleatoires } from "@/lib/noms-de-code";
 import { prisma } from "@/lib/prisma";
 import { dateOuNull, emailFacultatif, entierPositif, lireIdee, texte } from "@/lib/saisie";
 import { messageQuestion, messageReponse } from "@/lib/push";
-import { envoyerPush } from "@/lib/push-serveur";
+import { envoyerPush, signalerNouvellesIdees } from "@/lib/push-serveur";
 import { envoyerAjustements, envoyerBienvenueOrganisateur, envoyerLiensRetrouves, envoyerRappels } from "@/lib/rappels-serveur";
 import { echangerTirages, retirerDuTirage, tirer } from "@/lib/tirage";
 
@@ -427,6 +427,8 @@ export async function ajouterSouhait(jeton: string, _: Etat, f: FormData): Promi
   if (!s.titre) return { erreur: "Quel cadeau ?" };
   if ((await prisma.souhait.count({ where: { participantId: moi.id } })) >= 50) return { erreur: "50 idées au maximum." };
   await prisma.souhait.create({ data: { ...s, participantId: moi.id } });
+  // Son Père Noël secret est prévenu (sans nom dans la notification), après la réponse.
+  if (moi.groupe.tirageLe) after(() => signalerNouvellesIdees(moi.id, 1).then(() => {}));
   revalidatePath("/", "layout");
   return { ok: "Ajouté à votre liste." };
 }

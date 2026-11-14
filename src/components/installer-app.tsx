@@ -125,7 +125,7 @@ export function InstallerApp({ jeton, clePublique, compact = false }: { jeton: s
         const r = await abonnerPush(jeton, sub.toJSON());
         if (r?.erreur) return setMessage(r.erreur);
         setAbonne(true);
-        setMessage("🔔 C'est activé : vous serez prévenu du tirage, des questions et des rappels.");
+        setMessage("🔔 C'est activé : vous serez prévenu du tirage, des nouvelles idées, des questions et des rappels.");
       } catch {
         setMessage("L'activation n'a pas abouti sur ce navigateur. Réessayez depuis l'application installée.");
       }
@@ -228,7 +228,7 @@ export function InstallerApp({ jeton, clePublique, compact = false }: { jeton: s
             </div>
           ) : (
             <>
-              <p>Soyez prévenu du tirage, des questions de votre Père Noël secret et des rappels avant l&apos;échange.</p>
+              <p>Soyez prévenu du tirage, des nouvelles idées de la personne que vous avez tirée, des questions anonymes et des rappels avant l&apos;échange.</p>
               <button type="button" disabled={enCours || abonne === null} onClick={activer} className="bouton bouton-cerise">
                 <Bell size={16} aria-hidden /> {enCours ? "Un instant…" : "Activer les notifications"}
               </button>

@@ -3,7 +3,7 @@ import "server-only";
 import webpush from "web-push";
 
 import { prisma } from "./prisma";
-import type { MessagePush } from "./push";
+import { messageNouvelleIdee, type MessagePush } from "./push";
 import { SITE_URL } from "./site";
 
 /**
@@ -49,4 +49,27 @@ export async function envoyerPush(participantIds: string[], message: MessagePush
     }),
   );
   return reussis;
+}
+
+const DELAI_IDEES_MS = 30 * 60 * 1000;
+
+/**
+ * La personne `participantId` vient d'ajouter des idées : on prévient celui qui
+ * l'a tirée (s'il a activé les notifications). Une notification toutes les 30
+ * minutes au plus, pour qu'une liste remplie d'un coup n'en envoie pas dix.
+ */
+export async function signalerNouvellesIdees(participantId: string, nombre: number, maintenant = new Date(), envoyer: Envoyeur = envoyeurParDefaut): Promise<number> {
+  if (envoyer === envoyeurParDefaut && !pushConfigure()) return 0;
+  const pere = await prisma.participant.findUnique({
+    where: { destinataireId: participantId },
+    select: { id: true, jeton: true, groupe: { select: { nom: true, tirageLe: true } } },
+  });
+  if (!pere || !pere.groupe.tirageLe) return 0;
+  // Conditionnel : deux ajouts à la même seconde ne notifient qu'une fois.
+  const { count } = await prisma.participant.updateMany({
+    where: { id: pere.id, OR: [{ ideeSignaleeLe: null }, { ideeSignaleeLe: { lt: new Date(maintenant.getTime() - DELAI_IDEES_MS) } }] },
+    data: { ideeSignaleeLe: maintenant },
+  });
+  if (!count) return 0;
+  return envoyerPush([pere.id], messageNouvelleIdee(pere.groupe.nom, pere.jeton, nombre), envoyer);
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 import type { Etat } from "@/app/actions";
 import { boutiqueAmazon, deplierLienCourt } from "@/lib/affiliation";
@@ -20,6 +21,7 @@ import {
   type IdeeImportee,
 } from "@/lib/import-liste";
 import { prisma } from "@/lib/prisma";
+import { signalerNouvellesIdees } from "@/lib/push-serveur";
 import { imageSure, prixPositif } from "@/lib/saisie";
 
 /**
@@ -157,6 +159,7 @@ export async function importerIdees(jeton: string, choisies: IdeeImportee[]): Pr
   const retenues = propres.slice(0, place);
   if (p.sorte === "participant") {
     await prisma.souhait.createMany({ data: retenues.map((i) => ({ ...i, participantId: p.id })) });
+    after(() => signalerNouvellesIdees(p.id, retenues.length).then(() => {}));
   } else {
     await prisma.ideeListe.createMany({ data: retenues.map((i) => ({ ...i, listeId: p.id })) });
   }

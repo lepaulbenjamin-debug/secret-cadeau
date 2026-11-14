@@ -75,8 +75,12 @@ d'un lien Amazon ne peuvent venir que de son API officielle, la **Creators API**
 2. Vercel → *Environment Variables* (Production) :
    - `AMAZON_CREATORS_ID` = le Credential ID ;
    - `AMAZON_CREATORS_SECRET` = le Credential Secret ;
-   - `AMAZON_CREATORS_VERSION` = `3.2` (valeur par défaut, facultative).
+   - `AMAZON_CREATORS_VERSION` = la Version affichée avec les identifiants (`3.2` par défaut ;
+     les premiers identifiants étaient en `2.2` pour l'Europe, également pris en charge).
 3. **Redeploy**. `AMAZON_TAG_FR` doit aussi être renseigné : l'API l'exige.
+
+En cas d'échec, les journaux Vercel (*Logs*) contiennent une ligne « Amazon Creators API : »
+qui dit quelle étape a échoué et ce qu'Amazon a répondu (sans aucun secret).
 
 Amazon n'ouvre l'API qu'aux comptes Partenaires validés, ayant généré des ventes
 récentes : tant qu'elle refuse, le site retombe sans bruit sur le titre de l'adresse.

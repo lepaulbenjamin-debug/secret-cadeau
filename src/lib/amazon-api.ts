@@ -16,36 +16,64 @@ export type InfosAmazon = { titre: string; image: string; prix: number | null };
 
 type Env = Record<string, string | undefined>;
 
-const JETON_PAR_VERSION: Record<string, string> = {
+/**
+ * Deux générations d'identifiants : 3.x (serveur de connexion Amazon, JSON) et
+ * 2.x (les premiers, via Cognito, formulaire, et « Version » dans l'en-tête).
+ * La version est affichée à la création des identifiants.
+ */
+const JETON_V3: Record<string, string> = {
   "3.1": "https://api.amazon.com/auth/o2/token",
   "3.2": "https://api.amazon.co.uk/auth/o2/token",
   "3.3": "https://api.amazon.co.jp/auth/o2/token",
 };
+const JETON_V2: Record<string, string> = {
+  "2.1": "https://creatorsapi.auth.us-east-1.amazoncognito.com/oauth2/token",
+  "2.2": "https://creatorsapi.auth.eu-south-2.amazoncognito.com/oauth2/token",
+  "2.3": "https://creatorsapi.auth.us-west-2.amazoncognito.com/oauth2/token",
+};
 
-let jeton: { valeur: string; expire: number } | null = null;
+const nettoyer = (v: string | undefined) => (v ?? "").trim().replace(/^v/i, "");
+export const versionAmazon = (env: Env) => nettoyer(env.AMAZON_CREATORS_VERSION) || "3.2";
+
+let jeton: { valeur: string; expire: number; version: string } | null = null;
+
+/** Journal sans secret : l'étape qui a échoué et la réponse d'Amazon. */
+const journal = (...m: unknown[]) => console.log("Amazon Creators API :", ...m);
 
 async function jetonAcces(env: Env, fetcher: typeof fetch): Promise<string | null> {
-  if (jeton && jeton.expire > Date.now()) return jeton.valeur;
-  const r = await fetcher(JETON_PAR_VERSION[env.AMAZON_CREATORS_VERSION ?? "3.2"] ?? JETON_PAR_VERSION["3.2"], {
+  const version = versionAmazon(env);
+  if (jeton && jeton.expire > Date.now() && jeton.version === version) return jeton.valeur;
+  const id = (env.AMAZON_CREATORS_ID ?? "").trim();
+  const secret = (env.AMAZON_CREATORS_SECRET ?? "").trim();
+  const v2 = version.startsWith("2");
+  const adresse = v2 ? JETON_V2[version] : JETON_V3[version];
+  if (!adresse) {
+    journal(`version « ${version} » inconnue (attendu 3.1, 3.2, 3.3, 2.1, 2.2 ou 2.3)`);
+    return null;
+  }
+  const r = await fetcher(adresse, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": v2 ? "application/x-www-form-urlencoded" : "application/json" },
     signal: AbortSignal.timeout(6000),
-    body: JSON.stringify({
-      grant_type: "client_credentials",
-      client_id: env.AMAZON_CREATORS_ID,
-      client_secret: env.AMAZON_CREATORS_SECRET,
-      scope: "creatorsapi::default",
-    }),
+    body: v2
+      ? new URLSearchParams({ grant_type: "client_credentials", client_id: id, client_secret: secret, scope: "creatorsapi/default" }).toString()
+      : JSON.stringify({ grant_type: "client_credentials", client_id: id, client_secret: secret, scope: "creatorsapi::default" }),
   });
-  if (!r.ok) return null;
+  if (!r.ok) {
+    journal(`jeton refusé (version ${version}) :`, r.status, (await r.text().catch(() => "")).slice(0, 200));
+    return null;
+  }
   const d = (await r.json()) as { access_token?: string; expires_in?: number };
-  if (!d.access_token) return null;
+  if (!d.access_token) {
+    journal("jeton absent de la réponse");
+    return null;
+  }
   // Une heure de validité : on le garde, avec une marge.
-  jeton = { valeur: d.access_token, expire: Date.now() + Math.max(60, (d.expires_in ?? 3600) - 120) * 1000 };
+  jeton = { valeur: d.access_token, expire: Date.now() + Math.max(60, (d.expires_in ?? 3600) - 120) * 1000, version };
   return jeton.valeur;
 }
 
-export const amazonApiConfiguree = (env: Env = process.env) => Boolean(env.AMAZON_CREATORS_ID && env.AMAZON_CREATORS_SECRET);
+export const amazonApiConfiguree = (env: Env = process.env) => Boolean(env.AMAZON_CREATORS_ID?.trim() && env.AMAZON_CREATORS_SECRET?.trim());
 
 type Noeud = Record<string, unknown>;
 const en = (o: unknown, ...chemin: string[]): unknown =>
@@ -73,14 +101,22 @@ export async function infosAmazon(lien: string, env: Env = process.env, fetcher:
   const boutique = boutiqueAmazon(lien);
   const asin = asinDe(lien);
   const tag = boutique && identifiant(boutique, env);
-  if (!boutique || !asin || !tag) return null;
+  if (!boutique || !asin || !tag) {
+    journal(!asin ? "pas d'ASIN dans le lien" : `pas d'identifiant Partenaires pour amazon.${boutique}`);
+    return null;
+  }
   try {
     const acces = await jetonAcces(env, fetcher);
     if (!acces) return null;
+    const version = versionAmazon(env);
     const marche = `www.amazon.${boutique}`;
     const r = await fetcher("https://creatorsapi.amazon/catalog/v1/getItems", {
       method: "POST",
-      headers: { authorization: `Bearer ${acces}`, "content-type": "application/json", "x-marketplace": marche },
+      headers: {
+        authorization: version.startsWith("2") ? `Bearer ${acces}, Version ${version}` : `Bearer ${acces}`,
+        "content-type": "application/json",
+        "x-marketplace": marche,
+      },
       signal: AbortSignal.timeout(6000),
       body: JSON.stringify({
         itemIds: [asin],
@@ -92,11 +128,15 @@ export async function infosAmazon(lien: string, env: Env = process.env, fetcher:
     });
     if (r.status === 401) jeton = null;
     if (!r.ok) {
-      console.log("Amazon Creators API :", r.status, (await r.text().catch(() => "")).slice(0, 200));
+      journal(`getItems ${asin} refusé :`, r.status, (await r.text().catch(() => "")).slice(0, 300));
       return null;
     }
-    return lireArticle(await r.json());
-  } catch {
+    const d = await r.json();
+    const article = lireArticle(d);
+    if (!article) journal(`getItems ${asin} : réponse sans titre lisible`, JSON.stringify(d).slice(0, 300));
+    return article;
+  } catch (e) {
+    journal("erreur réseau :", (e as Error).message);
     return null;
   }
 }

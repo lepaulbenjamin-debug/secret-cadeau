@@ -161,6 +161,9 @@ model Liste {
   message       String    @default("")
   jetonProprio  String    @unique
   jetonPartage  String    @unique
+  /// Mode surprise (par défaut) : la personne fêtée ne voit pas ce qui est réservé, et le lien
+  /// partagé cache les réservations tant qu'on n'a pas confirmé « je ne suis pas <prénom> ».
+  surprise      Boolean   @default(true)
   /// Pour lui envoyer ses liens (facultatif). Visible de personne.
   emailProprio  String    @default("")
   /// Lien d'une liste tenue ailleurs (Amazon, autre site), montré aux proches.

@@ -29,7 +29,7 @@ export default async function ListePartagee({ params }: { params: Promise<{ jeto
   if (!liste) notFound();
   const moi = await compteCourant();
   // La personne fêtée, connectée : les réservations ne quittent même pas le serveur.
-  const proprioConnecte = Boolean(moi && (liste.compteId === moi.id || (liste.emailProprio && liste.emailProprio.toLowerCase() === moi.email)));
+  const proprioConnecte = liste.surprise && Boolean(moi && (liste.compteId === moi.id || (liste.emailProprio && liste.emailProprio.toLowerCase() === moi.email)));
   const duCompte = moi ? liste.idees.filter((i) => i.reserveCompteId === moi.id).map((i) => i.id) : [];
 
   const titre = titreListe(liste);
@@ -38,7 +38,6 @@ export default async function ListePartagee({ params }: { params: Promise<{ jeto
     const l = i.lien ? lienAffiche(i.lien) : { url: "", affilie: false };
     return { id: i.id, titre: i.titre, url: l.url, affilie: l.affilie, domaine: i.lien ? domaine(i.lien) : "", image: i.image, prix: i.prix, note: i.note, reservePar: proprioConnecte ? "" : i.reservePar };
   });
-  const libres = idees.filter((i) => !i.reservePar).length;
 
   return (
     <main className="space-y-6 pt-6">
@@ -58,11 +57,12 @@ export default async function ListePartagee({ params }: { params: Promise<{ jeto
         <p className="mt-1 mb-2 text-sm text-doux">
           {idees.length === 0
             ? `${liste.prenom} n'a pas encore ajouté d'idée. Revenez bientôt !`
-            : `Touchez « Je m'en occupe » sur le cadeau que vous offrez : ${liste.prenom} ne le saura pas, et les autres éviteront le doublon.`}
+            : liste.surprise
+              ? `Touchez « Je m'en occupe » sur le cadeau que vous offrez : ${liste.prenom} ne le saura pas, et les autres éviteront le doublon.`
+              : `Touchez « Je m'en occupe » sur le cadeau que vous offrez : les autres éviteront le doublon.`}
         </p>
         <LienListeExterne lien={liste.listeExterne} />
-        {idees.length > 0 && <IdeesPartagees jetonPartage={jeton} idees={idees} duCompte={duCompte} proprioConnecte={proprioConnecte} />}
-        {idees.length > 0 && libres === 0 && <p className="mt-3 text-sm font-medium text-sapin">Toutes les idées sont réservées 🎉</p>}
+        {idees.length > 0 && <IdeesPartagees jetonPartage={jeton} idees={idees} duCompte={duCompte} proprioConnecte={proprioConnecte} surprise={liste.surprise} prenomFete={liste.prenom} />}
       </section>
 
       <aside className="carte text-center">

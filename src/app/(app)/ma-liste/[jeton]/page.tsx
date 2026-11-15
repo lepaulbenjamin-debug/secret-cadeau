@@ -34,10 +34,13 @@ export default async function MaListe({ params, searchParams }: { params: Promis
   const { nouveau } = await searchParams;
   const liste = await prisma.liste.findUnique({
     where: { jetonProprio: jeton },
-    // ⚠️ Ni `reservePar` ni `jetonReserve` : la personne fêtée ne doit pas savoir ce qu'on lui offre.
-    include: { idees: { orderBy: { creeLe: "asc" }, select: { id: true, titre: true, lien: true, image: true, prix: true, note: true } } },
+    // `reservePar` n'est lu que pour une liste SANS mode surprise (voir plus bas) ; jamais `jetonReserve`.
+    include: { idees: { orderBy: { creeLe: "asc" }, select: { id: true, titre: true, lien: true, image: true, prix: true, note: true, reservePar: true } } },
   });
   if (!liste) notFound();
+  // ⚠️ Mode surprise : la personne fêtée ne doit pas savoir ce qu'on lui offre. Effacé ici, avant tout affichage.
+  const reservations = new Map(liste.surprise ? [] : liste.idees.filter((i) => i.reservePar).map((i) => [i.id, i.reservePar]));
+  for (const i of liste.idees) i.reservePar = "";
 
   const titre = titreListe(liste);
   const rebours = liste.date ? compteARebours(liste.date) : null;
@@ -74,8 +77,10 @@ export default async function MaListe({ params, searchParams }: { params: Promis
       <section className="carte">
         <h2 className="flex items-center gap-2 font-titre text-xl font-semibold"><Share2 size={20} /> Partager ma liste</h2>
         <p className="mt-1 text-sm text-doux">
-          Envoyez ce lien à vos proches : ils voient vos idées et réservent celle qu&apos;ils vous offrent. Vous ne saurez
-          jamais ce qui a été réservé, ni par qui.
+          Envoyez ce lien à vos proches : ils voient vos idées et réservent celle qu&apos;ils vous offrent.{" "}
+          {liste.surprise
+            ? "🤫 Mode surprise : vous ne saurez pas ce qui a été réservé, ni par qui."
+            : "Vous voyez ici ce qui a été réservé, et par qui (mode surprise désactivé)."}
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Partager chemin={`/liste/${liste.jetonPartage}`} texte={texteInvitation} libelle="Partager ma liste" />
@@ -104,6 +109,9 @@ export default async function MaListe({ params, searchParams }: { params: Promis
                 s={s}
                 pied={
                   <div className="flex items-start gap-2">
+                    {reservations.has(s.id) && (
+                      <span className="shrink-0 rounded-full bg-creme px-2.5 py-0.5 text-sm font-medium text-sapin">🎁 Réservé par {reservations.get(s.id)}</span>
+                    )}
                     <details className="flex-1">
                       <summary className="inline-flex cursor-pointer items-center gap-1 text-sm font-medium text-sapin"><Pencil size={13} /> Modifier</summary>
                       <div className="mt-3">
@@ -159,6 +167,14 @@ export default async function MaListe({ params, searchParams }: { params: Promis
               <label className="etiquette" htmlFor="message">Mot pour vos proches</label>
               <textarea id="message" name="message" rows={2} className="champ" defaultValue={liste.message} maxLength={500} />
             </div>
+            <label className="flex items-start gap-3 rounded-2xl bg-creme p-4 text-sm">
+              <input type="checkbox" name="surprise" defaultChecked={liste.surprise} className="mt-0.5 size-4 shrink-0 accent-[var(--sapin)]" />
+              <span>
+                <strong>🤫 Garder la surprise</strong> — vous ne saurez pas ce qui a été réservé, et le lien partagé cache les
+                réservations à qui n&apos;a pas confirmé ne pas être vous. Décochez pour voir ce qui est réservé (pratique pour
+                un mariage ou une naissance).
+              </span>
+            </label>
             <div>
               <label className="etiquette" htmlFor="email">Votre e-mail</label>
               <input id="email" name="email" type="email" className="champ" defaultValue={liste.emailProprio} maxLength={120} autoComplete="email" />

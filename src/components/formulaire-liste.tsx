@@ -41,6 +41,14 @@ export function FormulaireListe() {
         <label className="etiquette" htmlFor="message">Un mot pour vos proches <span className="font-normal text-doux">(facultatif)</span></label>
         <textarea id="message" name="message" rows={2} className="champ" maxLength={500} placeholder="Merci d'avance ! Toutes les idées sont des suggestions 😊" />
       </div>
+      <label className="flex items-start gap-3 rounded-2xl bg-creme p-4 text-sm">
+        <input type="checkbox" name="surprise" defaultChecked={true} className="mt-0.5 size-4 shrink-0 accent-[var(--sapin)]" />
+        <span>
+          <strong>🤫 Garder la surprise</strong> — vous ne saurez pas ce qui a été réservé, et le lien partagé cache les
+          réservations à qui n&apos;a pas confirmé ne pas être vous. Décochez pour voir ce qui est réservé (pratique pour
+          un mariage ou une naissance).
+        </span>
+      </label>
       <div>
         <label className="etiquette" htmlFor="email">Votre e-mail <span className="font-normal text-doux">(facultatif)</span></label>
         <input id="email" name="email" type="email" className="champ" maxLength={120} autoComplete="email" placeholder="lea@exemple.fr" />

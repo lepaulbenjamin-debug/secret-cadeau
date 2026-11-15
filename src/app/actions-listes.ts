@@ -40,6 +40,7 @@ export async function creerListe(_: unknown, f: FormData): Promise<ListeCreee> {
       date: dateOuNull(texte(f, "date", 10)),
       message: texte(f, "message", 500),
       emailProprio: email,
+      surprise: f.get("surprise") === "on",
       compteId: (await compteCourant())?.id,
       jetonProprio: nouveauJeton(),
       jetonPartage: nouveauJeton(),
@@ -60,9 +61,10 @@ export async function modifierListe(jetonProprio: string, _: Etat, f: FormData):
   if (email === null) return { erreur: "Cette adresse e-mail ne semble pas valide." };
   await prisma.liste.update({
     where: { id: liste.id },
-    data: { prenom, occasion: occasion(texte(f, "occasion", 20)), date: dateOuNull(texte(f, "date", 10)), message: texte(f, "message", 500), emailProprio: email },
+    data: { prenom, occasion: occasion(texte(f, "occasion", 20)), date: dateOuNull(texte(f, "date", 10)), message: texte(f, "message", 500), emailProprio: email, surprise: f.get("surprise") === "on" },
   });
   revalidatePath(`/ma-liste/${jetonProprio}`);
+  revalidatePath(`/liste/${liste.jetonPartage}`);
   return { ok: "Enregistré." };
 }
 

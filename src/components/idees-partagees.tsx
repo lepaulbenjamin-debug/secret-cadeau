@@ -52,6 +52,16 @@ const miennesInstantane = () => {
 };
 const VIDE: string[] = [];
 
+/** « Je ne suis pas Zoé » : retenu sur l'appareil, pour cette liste. */
+const clePasProprio = (j: string) => `quioffre:pas-proprio:${j}`;
+function lirePasProprio(j: string): boolean {
+  try {
+    return localStorage.getItem(clePasProprio(j)) === "1";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Les idées d'une liste vues par les proches, avec « Je m'en occupe ».
  *
@@ -64,6 +74,8 @@ export function IdeesPartagees({
   idees,
   duCompte = VIDE,
   proprioConnecte = false,
+  surprise = true,
+  prenomFete = "",
 }: {
   jetonPartage: string;
   idees: IdeePartagee[];
@@ -71,9 +83,17 @@ export function IdeesPartagees({
   duCompte?: string[];
   /** La personne fêtée, reconnue par son compte : le serveur n'a même pas envoyé les réservations. */
   proprioConnecte?: boolean;
+  /** Mode surprise : réservations cachées à qui n'a pas confirmé ne pas être la personne fêtée. */
+  surprise?: boolean;
+  prenomFete?: string;
 }) {
-  const proprioAppareil = useSyncExternalStore(() => () => {}, () => estProprioDe(jetonPartage), () => false);
+  const proprioAppareil = useSyncExternalStore(() => () => {}, () => surprise && estProprioDe(jetonPartage), () => false);
   const proprio = proprioConnecte || proprioAppareil;
+  const pasProprioRetenu = useSyncExternalStore(abonner, () => lirePasProprio(jetonPartage), () => false);
+  const miennesIci = useSyncExternalStore(abonner, () => miennesInstantane().some((id) => idees.some((i) => i.id === id)), () => false);
+  // Voilé : en mode surprise, tant que la personne n'a pas dit « je ne suis pas Zoé »
+  // (ou déjà réservé ici, depuis cet appareil ou ce compte).
+  const voile = surprise && !proprio && !pasProprioRetenu && !miennesIci && duCompte.length === 0;
   const miennes = useSyncExternalStore(abonner, miennesInstantane, () => VIDE);
   const [demande, setDemande] = useState<string | null>(null);
   const [prenom, setPrenom] = useState("");
@@ -104,9 +124,29 @@ export function IdeesPartagees({
           🙈 C&apos;est votre liste : les réservations sont masquées sur cet appareil, pour garder la surprise.
         </p>
       )}
+      {voile && (
+        <div className="mb-3 space-y-2 rounded-xl bg-or/20 p-3 text-sm">
+          <p>
+            🤫 <strong>Mode surprise</strong> : ce qui est déjà réservé est caché, pour que {prenomFete || "la personne fêtée"} ne le
+            découvre pas en ouvrant ce lien.
+          </p>
+          <button
+            type="button"
+            className="bouton !min-h-9 text-sm"
+            onClick={() => {
+              try {
+                localStorage.setItem(clePasProprio(jetonPartage), "1");
+              } catch {}
+              window.dispatchEvent(new Event("quioffre:reservations"));
+            }}
+          >
+            Je ne suis pas {prenomFete || "la personne fêtée"} : voir et réserver
+          </button>
+        </div>
+      )}
       <ul className="divide-y divide-trait">
         {idees.map((s) => {
-          const reservee = !proprio && Boolean(s.reservePar);
+          const reservee = !proprio && !voile && Boolean(s.reservePar);
           const parMoi = reservee && (miennes.includes(s.id) || duCompte.includes(s.id));
           return (
             <li key={s.id} className="py-3">
@@ -126,7 +166,7 @@ export function IdeesPartagees({
                 </div>
                 {s.prix != null && <span className="shrink-0 rounded-full bg-creme px-2.5 py-0.5 text-sm font-semibold">{euros(s.prix)}</span>}
               </div>
-              {!proprio && (
+              {!proprio && !voile && (
                 <div className="mt-2">
                   {parMoi ? (
                     <button type="button" disabled={enCours} onClick={() => annuler(s.id)} className="bouton !min-h-8 !px-3 text-sm">
@@ -179,9 +219,12 @@ export function IdeesPartagees({
           );
         })}
       </ul>
-      {!proprio && (
+      {!proprio && !voile && idees.every((i) => i.reservePar) && <p className="mt-3 text-sm font-medium text-sapin">Toutes les idées sont réservées 🎉</p>}
+      {!proprio && !voile && (
         <p className="mt-3 text-xs text-doux">
-          La personne fêtée ne voit jamais ce qui est réservé. Les autres proches voient votre prénom, pour éviter les doublons.
+          {surprise
+            ? "Mode surprise : la personne fêtée ne voit pas ce qui est réservé. Les autres proches voient votre prénom, pour éviter les doublons."
+            : "Les autres proches et la personne fêtée voient votre prénom sur ce que vous réservez."}
         </p>
       )}
     </>

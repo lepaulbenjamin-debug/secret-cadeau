@@ -1,10 +1,13 @@
 "use client";
 
-import { Loader2, Sparkles, X } from "lucide-react";
+import { Info, Loader2, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { apercuLien } from "@/app/actions";
 import { prixSaisi } from "@/lib/format";
+
+/** Un lien Amazon, complet ou court (amzn.eu, a.co…). */
+const AMAZON = /^(?:https?:\/\/)?(?:[\w-]+\.)*(?:amazon\.[a-z.]{2,6}|amzn\.(?:eu|to|com)|a\.co)(?:[/?#]|$)/i;
 
 type Valeurs = { titre?: string; lien?: string; prix?: number | null; note?: string; image?: string };
 
@@ -18,6 +21,8 @@ type Valeurs = { titre?: string; lien?: string; prix?: number | null; note?: str
 export function ChampsSouhait({ v = {}, id, jeton }: { v?: Valeurs; id: string; jeton: string }) {
   const [image, setImage] = useState(v.image ?? "");
   const [message, setMessage] = useState("");
+  // Une explication plutôt qu'un succès : Amazon n'a rien donné (ou presque).
+  const [explication, setExplication] = useState("");
   const [enCours, demarrer] = useTransition();
   const titre = useRef<HTMLInputElement>(null);
   const prix = useRef<HTMLInputElement>(null);
@@ -31,6 +36,7 @@ export function ChampsSouhait({ v = {}, id, jeton }: { v?: Valeurs; id: string; 
     const vider = () => {
       setImage(v.image ?? "");
       setMessage("");
+      setExplication("");
       dernier.current = v.lien ?? "";
     };
     form.addEventListener("reset", vider);
@@ -41,6 +47,7 @@ export function ChampsSouhait({ v = {}, id, jeton }: { v?: Valeurs; id: string; 
     const l = lien.trim();
     if (!l || l === dernier.current || !/^(https?:\/\/)?[\w-]+(\.[\w-]+)+/i.test(l)) return;
     dernier.current = l;
+    setExplication("");
     demarrer(async () => {
       try {
         const a = await apercuLien(jeton, l);
@@ -59,6 +66,14 @@ export function ChampsSouhait({ v = {}, id, jeton }: { v?: Valeurs; id: string; 
           rempli.push("l'image");
         }
         setMessage(rempli.length ? `On a rempli ${rempli.join(", ").replace(/, ([^,]*)$/, " et $1")} — vérifiez !` : "");
+        // ⚠️ Amazon interdit de lire ses pages : seule son API (pas encore ouverte au site) donne l'image et le prix.
+        if (AMAZON.test(l) && !a.image && !a.prix) {
+          setExplication(
+            a.titre
+              ? "Amazon ne permet pas encore de remplir l'image et le prix : ajoutez le prix à la main."
+              : "Amazon ne permet pas encore le remplissage automatique : indiquez le nom et le prix.",
+          );
+        }
       } catch {
         setMessage("");
       }
@@ -88,6 +103,11 @@ export function ChampsSouhait({ v = {}, id, jeton }: { v?: Valeurs; id: string; 
         {message && (
           <p className="mt-1 flex items-center gap-1 text-sm text-sapin">
             <Sparkles size={14} /> {message}
+          </p>
+        )}
+        {explication && (
+          <p className="mt-1 flex gap-1 text-sm text-doux">
+            <Info size={14} className="mt-0.5 shrink-0" aria-hidden /> {explication}
           </p>
         )}
       </div>

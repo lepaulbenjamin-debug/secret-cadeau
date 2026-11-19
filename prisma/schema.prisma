@@ -186,9 +186,8 @@ model IdeeListe {
   /// En euros, centimes compris (12,99).
   prix      Float?
   note      String   @default("")
-  /// Réservation par un proche : son prénom (montré aux autres proches, JAMAIS à la
-  /// personne fêtée) et le jeton de son appareil (pour qu'il puisse annuler).
-  reservePar   String    @default("")
+  /// Réservation par un proche, ANONYME : on ne garde que le jeton de son appareil (pour
+  /// qu'il puisse annuler). Vide = libre. Les autres voient seulement « Déjà réservé ».
   jetonReserve String    @default("")
   reserveLe    DateTime?
   /// Compte du proche qui a réservé, s'il était connecté : la réservation apparaît dans « Mon espace ».

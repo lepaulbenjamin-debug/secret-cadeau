@@ -18,11 +18,11 @@ export default async function ListePartagee({ params }: { params: Promise<{ jeto
   const { jeton } = await params;
   const liste = await prisma.liste.findUnique({
     where: { jetonPartage: jeton },
-    // ⚠️ Jamais `jetonReserve` (il permet d'annuler) ni `jetonProprio` vers le navigateur.
+    // ⚠️ `jetonReserve` (il permet d'annuler) ne sort jamais du serveur : on n'envoie qu'un booléen. Jamais `jetonProprio`.
     include: {
       idees: {
         orderBy: { creeLe: "asc" },
-        select: { id: true, titre: true, lien: true, image: true, prix: true, note: true, reservePar: true, reserveCompteId: true },
+        select: { id: true, titre: true, lien: true, image: true, prix: true, note: true, jetonReserve: true, reserveCompteId: true },
       },
     },
   });
@@ -36,7 +36,7 @@ export default async function ListePartagee({ params }: { params: Promise<{ jeto
   const rebours = liste.date ? compteARebours(liste.date) : null;
   const idees = liste.idees.map((i) => {
     const l = i.lien ? lienAffiche(i.lien) : { url: "", affilie: false };
-    return { id: i.id, titre: i.titre, url: l.url, affilie: l.affilie, domaine: i.lien ? domaine(i.lien) : "", image: i.image, prix: i.prix, note: i.note, reservePar: proprioConnecte ? "" : i.reservePar };
+    return { id: i.id, titre: i.titre, url: l.url, affilie: l.affilie, domaine: i.lien ? domaine(i.lien) : "", image: i.image, prix: i.prix, note: i.note, reserve: !proprioConnecte && i.jetonReserve !== "" };
   });
 
   return (

@@ -34,13 +34,13 @@ export default async function MaListe({ params, searchParams }: { params: Promis
   const { nouveau } = await searchParams;
   const liste = await prisma.liste.findUnique({
     where: { jetonProprio: jeton },
-    // `reservePar` n'est lu que pour une liste SANS mode surprise (voir plus bas) ; jamais `jetonReserve`.
-    include: { idees: { orderBy: { creeLe: "asc" }, select: { id: true, titre: true, lien: true, image: true, prix: true, note: true, reservePar: true } } },
+    // `jetonReserve` ne sert qu'à savoir si c'est réservé (liste SANS mode surprise) ; il n'est jamais affiché.
+    include: { idees: { orderBy: { creeLe: "asc" }, select: { id: true, titre: true, lien: true, image: true, prix: true, note: true, jetonReserve: true } } },
   });
   if (!liste) notFound();
   // ⚠️ Mode surprise : la personne fêtée ne doit pas savoir ce qu'on lui offre. Effacé ici, avant tout affichage.
-  const reservations = new Map(liste.surprise ? [] : liste.idees.filter((i) => i.reservePar).map((i) => [i.id, i.reservePar]));
-  for (const i of liste.idees) i.reservePar = "";
+  const reservees = new Set(liste.surprise ? [] : liste.idees.filter((i) => i.jetonReserve).map((i) => i.id));
+  for (const i of liste.idees) i.jetonReserve = "";
 
   const titre = titreListe(liste);
   const rebours = liste.date ? compteARebours(liste.date) : null;
@@ -80,7 +80,7 @@ export default async function MaListe({ params, searchParams }: { params: Promis
           Envoyez ce lien à vos proches : ils voient vos idées et réservent celle qu&apos;ils vous offrent.{" "}
           {liste.surprise
             ? "🤫 Mode surprise : vous ne saurez pas ce qui a été réservé, ni par qui."
-            : "Vous voyez ici ce qui a été réservé, et par qui (mode surprise désactivé)."}
+            : "Vous voyez ici ce qui a été réservé (mode surprise désactivé), mais jamais par qui."}
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <Partager chemin={`/liste/${liste.jetonPartage}`} texte={texteInvitation} libelle="Partager ma liste" />
@@ -109,8 +109,8 @@ export default async function MaListe({ params, searchParams }: { params: Promis
                 s={s}
                 pied={
                   <div className="flex items-start gap-2">
-                    {reservations.has(s.id) && (
-                      <span className="shrink-0 rounded-full bg-creme px-2.5 py-0.5 text-sm font-medium text-sapin">🎁 Réservé par {reservations.get(s.id)}</span>
+                    {reservees.has(s.id) && (
+                      <span className="shrink-0 rounded-full bg-creme px-2.5 py-0.5 text-sm font-medium text-sapin">🎁 Réservé</span>
                     )}
                     <details className="flex-1">
                       <summary className="inline-flex cursor-pointer items-center gap-1 text-sm font-medium text-sapin"><Pencil size={13} /> Modifier</summary>

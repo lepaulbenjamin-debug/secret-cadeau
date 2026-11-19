@@ -93,8 +93,8 @@ export default function ListeAnniversaire() {
 
       <h2>Comment éviter les doublons sans gâcher la surprise&nbsp;?</h2>
       <p>
-        C&apos;est tout l&apos;intérêt d&apos;une liste partagée. Quand un proche réserve une idée, les autres voient « Déjà réservé
-        par Tom » et passent à la suivante. Vous, en revanche, ne voyez rien : ni ce qui est réservé, ni par qui. Même si
+        C&apos;est tout l&apos;intérêt d&apos;une liste partagée. Quand un proche réserve une idée, les autres voient « Déjà
+        réservé », sans savoir par qui, et passent à la suivante. Vous, en revanche, ne voyez rien : ni ce qui est réservé, ni par qui. Même si
         vous ouvrez le lien partagé depuis votre propre téléphone, Qui Offre masque les réservations.
       </p>
       <p>
@@ -149,7 +149,7 @@ export default function ListeAnniversaire() {
           },
           {
             q: "La personne fêtée voit-elle ce qui a été réservé ?",
-            r: "Non. Les proches voient les réservations des autres, pour éviter les doublons, mais la personne fêtée ne voit jamais ni ce qui est réservé ni par qui, même en ouvrant le lien partagé sur son propre téléphone.",
+            r: "Non. Les proches voient qu'une idée est déjà réservée (sans savoir par qui), pour éviter les doublons, mais la personne fêtée ne voit jamais ni ce qui est réservé ni par qui, même en ouvrant le lien partagé sur son propre téléphone.",
           },
           {
             q: "Mes proches doivent-ils créer un compte pour réserver ?",

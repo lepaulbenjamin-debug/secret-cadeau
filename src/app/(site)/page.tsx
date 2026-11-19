@@ -197,7 +197,7 @@ export default function Accueil() {
           <ul aria-hidden className="space-y-2 text-sm">
             <li className="carte flex justify-between !py-3"><span>🎧 Un casque sans fil</span><span className="text-doux">60 €</span></li>
             <li className="carte flex justify-between !py-3"><span>📚 Le tome 3 de ma saga</span><span className="text-doux">18 €</span></li>
-            <li className="carte flex justify-between !py-3 text-doux"><span className="line-through">🪴 Une plante</span><span>réservé par Tom</span></li>
+            <li className="carte flex justify-between !py-3 text-doux"><span className="line-through">🪴 Une plante</span><span>déjà réservé</span></li>
           </ul>
         </div>
       </section>

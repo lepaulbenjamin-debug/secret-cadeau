@@ -111,20 +111,18 @@ export async function supprimerListe(jetonProprio: string): Promise<{ jetons: st
 const JETON_APPAREIL = /^[\w-]{16,64}$/;
 
 /**
- * Un proche réserve une idée. Son prénom est montré aux autres proches (« Déjà
- * réservé par Tom »), jamais à la personne fêtée ; le jeton de son appareil lui
- * permet d'annuler, et à personne d'autre.
+ * Un proche réserve une idée, ANONYMEMENT : personne ne sait qui s'en occupe, les
+ * autres voient seulement « Déjà réservé ». Le jeton de son appareil (ou son
+ * compte) lui permet d'annuler, et à personne d'autre.
  */
-export async function reserverIdee(jetonPartage: string, ideeId: string, prenomBrut: string, jetonAppareil: string): Promise<Refus> {
-  const prenom = lirePrenoms(String(prenomBrut).slice(0, 40))[0];
-  if (!prenom) return { erreur: "Indiquez votre prénom pour réserver." };
+export async function reserverIdee(jetonPartage: string, ideeId: string, jetonAppareil: string): Promise<Refus> {
   if (!JETON_APPAREIL.test(jetonAppareil)) return { erreur: "Réservation impossible depuis ce navigateur." };
   const liste = await prisma.liste.findUnique({ where: { jetonPartage } });
   if (!liste) return { erreur: "Cette liste n'existe plus." };
   // Conditionnel : deux proches qui touchent « réserver » à la même seconde ne s'écrasent pas.
   const { count } = await prisma.ideeListe.updateMany({
     where: { id: ideeId, listeId: liste.id, jetonReserve: "" },
-    data: { reservePar: prenom, jetonReserve: jetonAppareil, reserveLe: new Date(), reserveCompteId: (await compteCourant())?.id ?? null },
+    data: { jetonReserve: jetonAppareil, reserveLe: new Date(), reserveCompteId: (await compteCourant())?.id ?? null },
   });
   if (!count) return { erreur: "Quelqu'un vient de la réserver." };
   revalidatePath(`/liste/${jetonPartage}`);
@@ -138,7 +136,7 @@ export async function annulerReservation(jetonPartage: string, ideeId: string, j
   const qui = [{ jetonReserve: jetonAppareil || "—" }, ...(compte ? [{ reserveCompteId: compte.id }] : [])];
   const { count } = await prisma.ideeListe.updateMany({
     where: { id: ideeId, listeId: liste.id, NOT: { jetonReserve: "" }, OR: qui },
-    data: { reservePar: "", jetonReserve: "", reserveLe: null, reserveCompteId: null },
+    data: { jetonReserve: "", reserveLe: null, reserveCompteId: null },
   });
   if (!count) return { erreur: "Seule la personne qui a réservé peut annuler, depuis son appareil." };
   revalidatePath(`/liste/${jetonPartage}`);

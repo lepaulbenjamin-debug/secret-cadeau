@@ -91,7 +91,7 @@ export default async function EspacePerso({
 
   const pied = (s: SouhaitAffiche & { reserveParId: string | null }) => {
     const parMoi = s.reserveParId === moi.id;
-    if (s.reserveParId && !parMoi) return <span className="text-sm text-doux">🎁 Déjà réservé par quelqu&apos;un</span>;
+    if (s.reserveParId && !parMoi) return <span className="text-sm text-doux">🎁 Déjà réservé</span>;
     return (
       <BoutonAction
         action={basculerReservation.bind(null, jeton, s.id)}

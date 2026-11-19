@@ -1,7 +1,7 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
-import { useState, useSyncExternalStore, useTransition } from "react";
+import { useSyncExternalStore, useTransition } from "react";
 
 import { annulerReservation, reserverIdee } from "@/app/actions-listes";
 
@@ -17,10 +17,10 @@ export type IdeePartagee = {
   image: string;
   prix: number | null;
   note: string;
-  reservePar: string;
+  /** Réservé par quelqu'un (on ne sait jamais qui). */
+  reserve: boolean;
 };
 
-const CLE_PRENOM = "quioffre:prenom";
 const CLE_MIENNES = "quioffre:reservations";
 
 function lireMiennes(): string[] {
@@ -95,19 +95,13 @@ export function IdeesPartagees({
   // (ou déjà réservé ici, depuis cet appareil ou ce compte).
   const voile = surprise && !proprio && !pasProprioRetenu && !miennesIci && duCompte.length === 0;
   const miennes = useSyncExternalStore(abonner, miennesInstantane, () => VIDE);
-  const [demande, setDemande] = useState<string | null>(null);
-  const [prenom, setPrenom] = useState("");
   const [enCours, demarrer] = useTransition();
 
-  const reserver = (id: string, nom: string) =>
+  const reserver = (id: string) =>
     demarrer(async () => {
-      const r = await reserverIdee(jetonPartage, id, nom, jetonAppareil());
+      const r = await reserverIdee(jetonPartage, id, jetonAppareil());
       if (r && "erreur" in r) return alert(r.erreur);
-      try {
-        localStorage.setItem(CLE_PRENOM, nom);
-      } catch {}
       ecrireMiennes([...lireMiennes(), id]);
-      setDemande(null);
     });
 
   const annuler = (id: string) =>
@@ -146,7 +140,7 @@ export function IdeesPartagees({
       )}
       <ul className="divide-y divide-trait">
         {idees.map((s) => {
-          const reservee = !proprio && !voile && Boolean(s.reservePar);
+          const reservee = !proprio && !voile && s.reserve;
           const parMoi = reservee && (miennes.includes(s.id) || duCompte.includes(s.id));
           return (
             <li key={s.id} className="py-3">
@@ -173,42 +167,13 @@ export function IdeesPartagees({
                       ✓ Je m&apos;en occupe — annuler
                     </button>
                   ) : reservee ? (
-                    <span className="text-sm text-doux">🎁 Déjà réservé par {s.reservePar}</span>
-                  ) : demande === s.id ? (
-                    <form
-                      className="flex flex-wrap items-center gap-2"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (prenom.trim()) reserver(s.id, prenom.trim());
-                      }}
-                    >
-                      <input
-                        autoFocus
-                        value={prenom}
-                        onChange={(e) => setPrenom(e.target.value)}
-                        maxLength={40}
-                        placeholder="Votre prénom"
-                        aria-label="Votre prénom"
-                        className="champ !w-auto flex-1 !py-1.5"
-                      />
-                      <button type="submit" disabled={enCours || !prenom.trim()} className="bouton !min-h-9 !px-3 text-sm">Réserver</button>
-                    </form>
+                    <span className="text-sm text-doux">🎁 Déjà réservé</span>
                   ) : (
                     <button
                       type="button"
                       disabled={enCours}
                       className="bouton bouton-discret !min-h-8 !px-3 text-sm"
-                      onClick={() => {
-                        let connu = "";
-                        try {
-                          connu = localStorage.getItem(CLE_PRENOM) ?? "";
-                        } catch {}
-                        if (connu) reserver(s.id, connu);
-                        else {
-                          setPrenom("");
-                          setDemande(s.id);
-                        }
-                      }}
+                      onClick={() => reserver(s.id)}
                     >
                       Je m&apos;en occupe
                     </button>
@@ -219,12 +184,12 @@ export function IdeesPartagees({
           );
         })}
       </ul>
-      {!proprio && !voile && idees.every((i) => i.reservePar) && <p className="mt-3 text-sm font-medium text-sapin">Toutes les idées sont réservées 🎉</p>}
+      {!proprio && !voile && idees.every((i) => i.reserve) && <p className="mt-3 text-sm font-medium text-sapin">Toutes les idées sont réservées 🎉</p>}
       {!proprio && !voile && (
         <p className="mt-3 text-xs text-doux">
           {surprise
-            ? "Mode surprise : la personne fêtée ne voit pas ce qui est réservé. Les autres proches voient votre prénom, pour éviter les doublons."
-            : "Les autres proches et la personne fêtée voient votre prénom sur ce que vous réservez."}
+            ? "Réservation anonyme : les autres voient seulement « Déjà réservé », jamais qui s'en occupe. La personne fêtée ne voit rien (mode surprise)."
+            : "Réservation anonyme : les autres, et la personne fêtée, voient seulement « Réservé », jamais qui s'en occupe."}
         </p>
       )}
     </>

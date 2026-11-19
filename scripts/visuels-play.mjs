@@ -81,7 +81,7 @@ const liste = await db.liste.create({
       create: [
         { titre: "Un casque sans fil", prix: 60, note: "Noir ou bleu nuit" },
         { titre: "Le tome 3 de ma saga préférée", prix: 18, note: "Format poche" },
-        { titre: "Une plante pour mon bureau", prix: 25, reservePar: "Tom", jetonReserve: "demo-appareil-tom-000000" },
+        { titre: "Une plante pour mon bureau", prix: 25, jetonReserve: "demo-appareil-tom-000000" },
         { titre: "Un cours de poterie", prix: 45, note: "Le samedi matin" },
       ],
     },

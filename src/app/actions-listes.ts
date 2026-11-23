@@ -9,6 +9,7 @@ import { nouveauJeton } from "@/lib/jeton";
 import { occasion } from "@/lib/occasions";
 import { compteCourant } from "@/lib/compte/session";
 import { prisma } from "@/lib/prisma";
+import { signalerIdeesDeListe } from "@/lib/push-serveur";
 import { envoyerBienvenueListe } from "@/lib/rappels-serveur";
 import { dateOuNull, emailFacultatif, lireIdee, texte } from "@/lib/saisie";
 
@@ -75,6 +76,8 @@ export async function ajouterIdeeListe(jetonProprio: string, _: Etat, f: FormDat
   if (!idee.titre) return { erreur: "Quel cadeau ?" };
   if ((await prisma.ideeListe.count({ where: { listeId: liste.id } })) >= MAX_IDEES) return { erreur: `${MAX_IDEES} idées au maximum.` };
   await prisma.ideeListe.create({ data: { ...idee, listeId: liste.id } });
+  // Rattachée à des tirages : leurs Pères Noël secrets sont prévenus (sans nom).
+  after(() => signalerIdeesDeListe(liste.id, 1));
   revalidatePath(`/ma-liste/${jetonProprio}`);
   return { ok: "Ajouté à votre liste." };
 }
@@ -129,6 +132,8 @@ export async function reserverIdee(jetonPartage: string, ideeId: string, jetonAp
 }
 
 export async function annulerReservation(jetonPartage: string, ideeId: string, jetonAppareil: string): Promise<Refus> {
+  // Un vrai jeton d'appareil seulement : jamais la marque d'un participant (« p:… »).
+  if (jetonAppareil && !JETON_APPAREIL.test(jetonAppareil)) return { erreur: "Annulation impossible depuis ce navigateur." };
   const liste = await prisma.liste.findUnique({ where: { jetonPartage } });
   if (!liste) return { erreur: "Cette liste n'existe plus." };
   // Depuis l'appareil de la réservation, ou depuis n'importe quel appareil connecté au même compte.

@@ -190,6 +190,17 @@ export async function retirerParticipant(jetonAdmin: string, participantId: stri
 }
 
 /**
+ * Le participant quitte lui-même le groupe, AVANT le tirage (ses idées partent
+ * avec lui). Après le tirage, c'est l'organisateur qui ajuste (désistement).
+ * Pas de revalidatePath : sa page n'existe plus, le client part vers l'accueil.
+ */
+export async function quitterGroupe(jeton: string): Promise<Refus> {
+  const moi = await participantParJeton(jeton);
+  if (moi.groupe.tirageLe) return { erreur: "Le tirage est déjà fait : demandez à l'organisateur de vous retirer, il ajustera le tirage." };
+  await prisma.participant.delete({ where: { id: moi.id } });
+}
+
+/**
  * Un participant se désiste APRÈS le tirage. Au lieu de tout refaire, on
  * ajuste le moins possible (voir `retirerDuTirage`) : une ou deux personnes
  * changent de destinataire, les autres gardent le leur et leur cadeau.
@@ -280,7 +291,7 @@ export async function lancerTirage(jetonAdmin: string, _etat: Etat, f: FormData)
   const [participants, exclusions] = await Promise.all([
     prisma.participant.findMany({
       where: { groupeId: groupe.id },
-      select: { id: true, prenom: true, _count: { select: { souhaits: true } } },
+      select: { id: true, prenom: true, _count: { select: { souhaits: true } }, liste: { select: { _count: { select: { idees: true } } } } },
     }),
     prisma.exclusion.findMany({ where: { groupeId: groupe.id }, select: { aId: true, bId: true } }),
   ]);
@@ -288,7 +299,7 @@ export async function lancerTirage(jetonAdmin: string, _etat: Etat, f: FormData)
 
   // Mode mystère : on offre à un nom de code, sans savoir qui c'est. Sans liste,
   // le Père Noël n'a strictement rien pour choisir.
-  const vides = participants.filter((p) => p._count.souhaits === 0).map((p) => p.prenom);
+  const vides = participants.filter((p) => p._count.souhaits + (p.liste?._count.idees ?? 0) === 0).map((p) => p.prenom);
   if (groupe.nomsDeCode && vides.length && f?.get("forcer") !== "on") {
     return {
       erreur: `Mode mystère : la liste est obligatoire, et ${vides.length > 1 ? `${vides.length} personnes n'ont` : "1 personne n'a"} encore rien noté (${vides.join(", ")}). Relancez-les, ou cochez « Lancer quand même ».`,

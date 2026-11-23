@@ -21,7 +21,7 @@ import {
   type IdeeImportee,
 } from "@/lib/import-liste";
 import { prisma } from "@/lib/prisma";
-import { signalerNouvellesIdees } from "@/lib/push-serveur";
+import { signalerIdeesDeListe, signalerNouvellesIdees } from "@/lib/push-serveur";
 import { imageSure, prixPositif } from "@/lib/saisie";
 
 /**
@@ -162,6 +162,7 @@ export async function importerIdees(jeton: string, choisies: IdeeImportee[]): Pr
     after(() => signalerNouvellesIdees(p.id, retenues.length).then(() => {}));
   } else {
     await prisma.ideeListe.createMany({ data: retenues.map((i) => ({ ...i, listeId: p.id })) });
+    after(() => signalerIdeesDeListe(p.id, retenues.length));
   }
   revalidatePath("/", "layout");
   const n = retenues.length;

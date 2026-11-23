@@ -46,7 +46,7 @@ export async function envoyerRappels({ groupeId, maintenant = new Date() }: { gr
     include: {
       participants: {
         where: joignable,
-        include: { rappels: { select: { type: true, envoyeLe: true } }, _count: { select: { souhaits: true, abonnementsPush: true } } },
+        include: { rappels: { select: { type: true, envoyeLe: true } }, _count: { select: { souhaits: true, abonnementsPush: true } }, liste: { select: { _count: { select: { idees: true } } } } },
       },
     },
   });
@@ -63,7 +63,7 @@ export async function envoyerRappels({ groupeId, maintenant = new Date() }: { gr
         rappelsEmail: p.rappelsEmail,
         push: p._count.abonnementsPush > 0,
         nomDeCode: p.nomDeCode,
-        nbSouhaits: p._count.souhaits,
+        nbSouhaits: p._count.souhaits + (p.liste?._count.idees ?? 0),
         dejaEnvoyes: p.rappels.map((r) => r.type as TypeRappel),
         dernierEnvoi: p.rappels.reduce<Date | null>((d, r) => (!d || r.envoyeLe > d ? r.envoyeLe : d), null),
       };
@@ -115,7 +115,7 @@ async function relancerOrganisateurs({ groupeId, maintenant, bilan }: { groupeId
       emailOrganisateur: { not: "" },
       dateEchange: { lte: dans8jours, gte: new Date(maintenant.getTime() - 24 * 60 * 60 * 1000) },
     },
-    include: { participants: { select: { prenom: true, _count: { select: { souhaits: true } } } } },
+    include: { participants: { select: { prenom: true, _count: { select: { souhaits: true } }, liste: { select: { _count: { select: { idees: true } } } } } } },
   });
   for (const g of groupes) {
     if (!relanceOrganisateurDue(g, maintenant)) continue;
@@ -125,7 +125,7 @@ async function relancerOrganisateurs({ groupeId, maintenant, bilan }: { groupeId
       site: SITE_URL,
       prenom: "",
       nbParticipants: g.participants.length,
-      listesVides: g.participants.filter((p) => p._count.souhaits === 0).map((p) => p.prenom),
+      listesVides: g.participants.filter((p) => p._count.souhaits + (p.liste?._count.idees ?? 0) === 0).map((p) => p.prenom),
       maintenant,
     });
     const r = await envoyerEmail({ a: g.emailOrganisateur, ...c }).catch((e: Error) => ({ ok: false, motif: e.message }));

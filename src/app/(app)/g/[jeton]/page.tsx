@@ -50,7 +50,7 @@ export default async function Organisation({
       // ⚠️ `destinataireId` n'est PAS lu : l'organisateur ne doit pas pouvoir découvrir le tirage.
       participants: {
         orderBy: { prenom: "asc" },
-        select: { id: true, prenom: true, nomDeCode: true, jeton: true, email: true, telephone: true, ouvertLe: true, _count: { select: { souhaits: true } } },
+        select: { id: true, prenom: true, nomDeCode: true, jeton: true, email: true, telephone: true, ouvertLe: true, _count: { select: { souhaits: true } }, liste: { select: { _count: { select: { idees: true } } } } },
       },
       exclusions: { include: { a: { select: { prenom: true } }, b: { select: { prenom: true } } } },
     },
@@ -74,7 +74,9 @@ export default async function Organisation({
 
   const tire = Boolean(groupe.tirageLe);
   const anonyme = groupe.nomsDeCode;
-  const listesVides = groupe.participants.filter((p) => p._count.souhaits === 0).map((p) => p.prenom);
+  // Les idées d'une liste rattachée comptent aussi.
+  const nbIdees = (p: (typeof groupe.participants)[number]) => p._count.souhaits + (p.liste?._count.idees ?? 0);
+  const listesVides = groupe.participants.filter((p) => nbIdees(p) === 0).map((p) => p.prenom);
   const rebours = groupe.dateEchange ? compteARebours(groupe.dateEchange) : null;
   const ouverts = groupe.participants.filter((p) => p.ouvertLe).length;
   const dateIso = groupe.dateEchange?.toISOString().slice(0, 10) ?? "";
@@ -219,7 +221,7 @@ export default async function Organisation({
                 </p>
                 <p className="flex items-center gap-1 text-xs text-doux">
                   {p.ouvertLe ? <><Eye size={13} /> a ouvert son lien</> : <><EyeOff size={13} /> pas encore ouvert</>}
-                  {" · "}{p._count.souhaits} idée{p._count.souhaits > 1 ? "s" : ""}
+                  {" · "}{nbIdees(p)} idée{nbIdees(p) > 1 ? "s" : ""}
                 </p>
                 {(p.telephone || p.email) && (
                   <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs">

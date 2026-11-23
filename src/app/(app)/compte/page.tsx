@@ -20,7 +20,7 @@ function Ligne({ href, titre, detail, icone }: { href: string; titre: string; de
         <span className="shrink-0 text-cerise" aria-hidden>{icone}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{titre}</span>
-          <span className="block truncate text-sm text-doux">{detail}</span>
+          <span className="block text-sm text-doux">{detail}</span>
         </span>
       </Link>
     </li>
@@ -53,9 +53,10 @@ export default async function MonEspace() {
         </section>
       )}
 
-      {(e.participations.length > 0 || e.organisations.length > 0) && (
+      {e.participations.length > 0 && (
         <section className="carte">
-          <h2 className="font-titre text-xl font-semibold">Mes Secret Santa</h2>
+          <h2 className="flex items-center gap-2 font-titre text-xl font-semibold"><Gift size={20} className="text-cerise" aria-hidden /> Je participe</h2>
+          <p className="mt-1 text-sm text-doux">Vos espaces de Secret Santa : votre tirage, votre liste d&apos;envies.</p>
           <ul className="mt-2 divide-y divide-trait">
             {e.participations.map((p) => (
               <Ligne
@@ -66,13 +67,22 @@ export default async function MonEspace() {
                 detail={[`Espace de ${p.prenom}`, p.tire ? "tirage fait" : "en attente du tirage", quand(p.groupe.dateEchange)].filter(Boolean).join(" · ")}
               />
             ))}
+          </ul>
+        </section>
+      )}
+
+      {e.organisations.length > 0 && (
+        <section className="carte">
+          <h2 className="flex items-center gap-2 font-titre text-xl font-semibold"><Crown size={20} className="text-cerise" aria-hidden /> J&apos;organise</h2>
+          <p className="mt-1 text-sm text-doux">Les groupes dont vous êtes l&apos;organisateur : participants, invitations, tirage.</p>
+          <ul className="mt-2 divide-y divide-trait">
             {e.organisations.map((o) => (
               <Ligne
                 key={o.jetonAdmin}
                 href={`/g/${o.jetonAdmin}`}
                 icone={<Crown size={20} />}
                 titre={o.nom}
-                detail={["Organisation", `${o._count.participants} participant${o._count.participants > 1 ? "s" : ""}`, o.tirageLe ? "tirage fait" : null].filter(Boolean).join(" · ")}
+                detail={[`${o._count.participants} participant${o._count.participants > 1 ? "s" : ""}`, o.tirageLe ? "tirage fait" : "tirage à lancer", quand(o.dateEchange)].filter(Boolean).join(" · ")}
               />
             ))}
           </ul>

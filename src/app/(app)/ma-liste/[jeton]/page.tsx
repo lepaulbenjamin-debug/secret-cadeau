@@ -1,6 +1,5 @@
 import { CalendarDays, Pencil, Share2, Trash2 } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ajouterIdeeListe, modifierIdeeListe, modifierListe, supprimerIdeeListe } from "@/app/actions-listes";
@@ -16,6 +15,7 @@ import { RattacherCompte } from "@/components/rattacher-compte";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { Souhait } from "@/components/souhait";
 import { SupprimerListe } from "@/components/supprimer-liste";
+import { LienRetour } from "@/components/lien-retour";
 import { compteARebours, dateLongue } from "@/lib/format";
 import { OCCASIONS, titreListe } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
@@ -51,7 +51,7 @@ export default async function MaListe({ params, searchParams }: { params: Promis
       <SeSouvenir type="liste-proprio" jeton={jeton} jetonPartage={liste.jetonPartage} groupe={titre} prenom={liste.prenom} />
 
       <header>
-        <Link href="/" className="text-sm text-doux">← Accueil</Link>
+        <LienRetour />
         <p className="mt-4 text-sm font-semibold text-cerise">Ma liste de cadeaux</p>
         <h1 className="font-titre text-3xl font-bold">{titre}</h1>
         {liste.date && (

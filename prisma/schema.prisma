@@ -58,6 +58,10 @@ model Participant {
   /// Lien d'une liste tenue ailleurs (Amazon, autre site), montré aux autres participants.
   listeExterne String  @default("")
   /// Compte de la personne (facultatif) : son espace apparaît dans « Mon espace ».
+  /// Une liste de cadeaux (modèle Liste) rattachée à ce tirage : ses idées s'ajoutent à
+  /// celles du participant, en direct. Une même liste peut servir à plusieurs tirages.
+  listeId      String?
+  liste        Liste?  @relation("ListeRattachee", fields: [listeId], references: [id], onDelete: SetNull)
   /// Dernière notification « nouvelle idée » reçue (une toutes les 30 minutes au plus).
   ideeSignaleeLe DateTime?
   compteId     String?
@@ -84,6 +88,7 @@ model Participant {
   exclusionsB     Exclusion[] @relation("ExclusionB")
 
   @@index([groupeId])
+  @@index([listeId])
 }
 
 /// Deux personnes qui ne doivent pas se tirer l'une l'autre (un couple…).
@@ -174,6 +179,8 @@ model Liste {
   creeLe        DateTime  @default(now())
 
   idees IdeeListe[]
+  /// Les tirages auxquels la liste est rattachée.
+  participants  Participant[] @relation("ListeRattachee")
 }
 
 model IdeeListe {

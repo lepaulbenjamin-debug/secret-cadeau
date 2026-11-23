@@ -13,20 +13,26 @@ import {
   supprimerSouhait,
 } from "@/app/actions";
 import { viderListe } from "@/app/actions-import";
+import { basculerReservationListe, detacherListe } from "@/app/actions-rattacher";
 import { BoutonAction } from "@/components/bouton-action";
 import { ChampsSouhait } from "@/components/champs-souhait";
+import { ChoisirListe } from "@/components/choisir-liste";
 import { CopierLien } from "@/components/copier-lien";
 import { OuvrirSiAncre } from "@/components/ouvrir-si-ancre";
 import { Formulaire } from "@/components/formulaire";
 import { ImportListe } from "@/components/import-liste";
 import { InstallerApp } from "@/components/installer-app";
 import { LienListeExterne } from "@/components/lien-liste-externe";
+import { QuitterGroupe } from "@/components/quitter-groupe";
 import { Revelation } from "@/components/revelation";
 import { RattacherCompte } from "@/components/rattacher-compte";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { Souhait, type SouhaitAffiche } from "@/components/souhait";
 import { assurerNomsDeCode, nomVisible, participantOu404 } from "@/lib/acces";
+import { compteCourant } from "@/lib/compte/session";
 import { compteARebours, dateLongue } from "@/lib/format";
+import { champsIdeeListe, marqueParticipant } from "@/lib/liste-rattachee";
+import { titreListe } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -74,11 +80,41 @@ export default async function EspacePerso({
     prisma.participant.findMany({
       where: { groupeId: groupe.id, id: { not: moi.id } },
       orderBy: { prenom: "asc" },
-      select: { id: true, prenom: true, nomDeCode: true, listeExterne: true, souhaits: { orderBy: { creeLe: "asc" }, select: champsSouhait } },
+      select: {
+        id: true,
+        prenom: true,
+        nomDeCode: true,
+        listeExterne: true,
+        souhaits: { orderBy: { creeLe: "asc" }, select: champsSouhait },
+        // Sa liste de cadeaux rattachée : ses idées s'ajoutent, en direct. Jamais son titre (prénom, en mode mystère).
+        liste: { select: { idees: { orderBy: { creeLe: "asc" }, select: champsIdeeListe } } },
+      },
     }),
     prisma.question.findMany({ where: { destinataireId: moi.id }, orderBy: { creeLe: "asc" } }),
     prisma.question.findMany({ where: { pereId: moi.id }, orderBy: { creeLe: "asc" } }),
   ]);
+
+  // Ma liste rattachée (sans les réservations : je ne dois pas savoir ce qu'on m'offre),
+  // et les listes que je pourrais rattacher, trouvées dans mon compte.
+  const compte = await compteCourant();
+  const [maListe, listesDuCompte] = await Promise.all([
+    moi.listeId
+      ? prisma.liste.findUnique({
+          where: { id: moi.listeId },
+          select: { jetonProprio: true, prenom: true, occasion: true, idees: { orderBy: { creeLe: "asc" }, select: { id: true, titre: true, lien: true, image: true, prix: true, note: true } } },
+        })
+      : null,
+    compte && !moi.listeId
+      ? prisma.liste.findMany({
+          where: { OR: [{ compteId: compte.id }, { emailProprio: { equals: compte.email, mode: "insensitive" } }] },
+          select: { jetonProprio: true, prenom: true, occasion: true },
+          orderBy: { creeLe: "desc" },
+          take: 20,
+        })
+      : [],
+  ]);
+  const monTotal = mesSouhaits.length + (maListe?.idees.length ?? 0);
+  const maMarque = marqueParticipant(moi.id);
 
   const destinataire = autres.find((p) => p.id === moi.destinataireId) ?? null;
   // En mode mystère, les autres ne sont que des noms de code — triés comme tels,
@@ -102,6 +138,32 @@ export default async function EspacePerso({
     );
   };
 
+
+  /** Une idée d'une liste rattachée : même réservation que sur le lien partagé de la liste, anonyme. */
+  const piedListe = (i: { id: string; jetonReserve: string }) => {
+    const parMoi = i.jetonReserve === maMarque;
+    if (i.jetonReserve && !parMoi) return <span className="text-sm text-doux">🎁 Déjà réservé</span>;
+    return (
+      <BoutonAction
+        action={basculerReservationListe.bind(null, jeton, i.id)}
+        className={parMoi ? "bouton !min-h-8 !px-3 text-sm" : "bouton bouton-discret !min-h-8 !px-3 text-sm"}
+      >
+        {parMoi ? "✓ Je m'en occupe — annuler" : "Je m'en occupe"}
+      </BoutonAction>
+    );
+  };
+  type Personne = (typeof autres)[number];
+  const nbIdees = (p: Personne) => p.souhaits.length + (p.liste?.idees.length ?? 0);
+  const toutesSesIdees = (p: Personne) => (
+    <>
+      {p.souhaits.map((s) => (
+        <Souhait key={s.id} s={s} barre={Boolean(s.reserveParId && s.reserveParId !== moi.id)} pied={pied(s)} />
+      ))}
+      {p.liste?.idees.map((i) => (
+        <Souhait key={i.id} s={i} barre={Boolean(i.jetonReserve && i.jetonReserve !== maMarque)} pied={piedListe(i)} />
+      ))}
+    </>
+  );
   return (
     <main className="space-y-6 pt-6">
       <SeSouvenir type="perso" jeton={jeton} groupe={groupe.nom} prenom={moi.prenom} />
@@ -168,12 +230,8 @@ export default async function EspacePerso({
             <h2 className="flex items-center gap-2 font-titre text-xl font-semibold"><Gift size={20} /> Ses idées</h2>
             {/* En mode mystère, une liste tenue ailleurs porte souvent le nom de son auteur : on ne la montre pas. */}
             {!anonyme && <LienListeExterne lien={destinataire.listeExterne} />}
-            {destinataire.souhaits.length ? (
-              <ul className="mt-2 divide-y divide-trait">
-                {destinataire.souhaits.map((s) => (
-                  <Souhait key={s.id} s={s} barre={Boolean(s.reserveParId && s.reserveParId !== moi.id)} pied={pied(s)} />
-                ))}
-              </ul>
+            {nbIdees(destinataire) ? (
+              <ul className="mt-2 divide-y divide-trait">{toutesSesIdees(destinataire)}</ul>
             ) : (
               <p className="mt-2 text-sm text-doux">Pas encore d&apos;idée sur sa liste. Posez-lui une question ci-dessous !</p>
             )}
@@ -246,7 +304,7 @@ export default async function EspacePerso({
           )}
         </div>
         <p className="mt-1 text-sm text-doux">Tout le groupe la voit. Vous ne saurez jamais ce qui a été réservé : surprise garantie.</p>
-        {anonyme && mesSouhaits.length === 0 && (
+        {anonyme && monTotal === 0 && (
           <p role="alert" className="mt-3 rounded-xl bg-cerise-clair p-3 text-sm font-medium text-cerise">
             Obligatoire en mode mystère : sans liste, votre Père Noël n&apos;a aucune idée de qui vous êtes… ni de ce qui
             vous ferait plaisir !
@@ -288,6 +346,35 @@ export default async function EspacePerso({
           </Formulaire>
         </div>
         <ImportListe jeton={jeton} listeExterne={moi.listeExterne} mystere={anonyme} />
+
+        {maListe ? (
+          <div className="mt-4 space-y-2 rounded-2xl border border-trait p-4 text-sm">
+            <p className="font-semibold">🔗 Liste rattachée : {titreListe(maListe)}</p>
+            <p className="text-doux">
+              Ses {maListe.idees.length} idée{maListe.idees.length > 1 ? "s" : ""} s&apos;ajoutent à celles-ci pour votre Père Noël
+              secret, et restent à jour quand vous la modifiez.
+            </p>
+            {maListe.idees.length > 0 && (
+              <ul className="divide-y divide-trait">
+                {maListe.idees.map((i) => (
+                  <Souhait key={i.id} s={i} />
+                ))}
+              </ul>
+            )}
+            <div className="flex flex-wrap items-center gap-4">
+              <Link href={`/ma-liste/${maListe.jetonProprio}`} className="font-medium text-sapin underline">Modifier cette liste</Link>
+              <BoutonAction
+                action={detacherListe.bind(null, jeton)}
+                confirmation="Détacher cette liste du tirage ? Ses idées ne s'afficheront plus ici (la liste elle-même ne change pas)."
+                className="font-medium text-cerise underline"
+              >
+                Détacher
+              </BoutonAction>
+            </div>
+          </div>
+        ) : (
+          <ChoisirListe jeton={jeton} duCompte={listesDuCompte.map((l) => ({ jetonProprio: l.jetonProprio, titre: titreListe(l) }))} />
+        )}
       </section>
 
       {/* Mes coordonnées */}
@@ -326,15 +413,11 @@ export default async function EspacePerso({
             {restants.map((p) => (
               <details key={p.id} className="py-2">
                 <summary className="cursor-pointer py-1 font-semibold">
-                  {nomVisible(p, anonyme)} <span className="font-normal text-doux">· {p.souhaits.length} idée{p.souhaits.length > 1 ? "s" : ""}</span>
+                  {nomVisible(p, anonyme)} <span className="font-normal text-doux">· {nbIdees(p)} idée{nbIdees(p) > 1 ? "s" : ""}</span>
                 </summary>
                 {!anonyme && p.listeExterne && <div className="pb-2"><LienListeExterne lien={p.listeExterne} /></div>}
-                {p.souhaits.length ? (
-                  <ul className="divide-y divide-trait">
-                    {p.souhaits.map((s) => (
-                      <Souhait key={s.id} s={s} barre={Boolean(s.reserveParId && s.reserveParId !== moi.id)} pied={pied(s)} />
-                    ))}
-                  </ul>
+                {nbIdees(p) ? (
+                  <ul className="divide-y divide-trait">{toutesSesIdees(p)}</ul>
                 ) : (
                   <p className="pb-2 text-sm text-doux">Liste vide pour l&apos;instant.</p>
                 )}
@@ -342,6 +425,17 @@ export default async function EspacePerso({
             ))}
           </div>
         </section>
+      )}
+
+      {!groupe.tirageLe && (
+        <details className="carte border-cerise/30">
+          <summary className="cursor-pointer font-titre text-xl font-semibold text-cerise">Quitter ce groupe</summary>
+          <p className="my-3 text-sm text-doux">
+            Vous ne participez plus ? Votre espace et votre liste d&apos;envies de ce groupe sont effacés. Possible tant que le
+            tirage n&apos;est pas fait.
+          </p>
+          <QuitterGroupe jeton={jeton} groupe={groupe.nom} />
+        </details>
       )}
 
       <p className="text-center text-xs text-doux">Ce lien est personnel : ne le transférez pas, il dévoilerait votre tirage.</p>

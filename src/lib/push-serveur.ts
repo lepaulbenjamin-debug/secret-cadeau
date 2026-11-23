@@ -73,3 +73,10 @@ export async function signalerNouvellesIdees(participantId: string, nombre: numb
   if (!count) return 0;
   return envoyerPush([pere.id], messageNouvelleIdee(pere.groupe.nom, pere.jeton, nombre), envoyer);
 }
+
+/** Des idées ajoutées à une liste de cadeaux : on prévient les Pères Noël de chaque tirage où elle est rattachée. */
+export async function signalerIdeesDeListe(listeId: string, nombre: number): Promise<void> {
+  if (!pushConfigure()) return;
+  const rattaches = await prisma.participant.findMany({ where: { listeId }, select: { id: true } });
+  for (const r of rattaches) await signalerNouvellesIdees(r.id, nombre);
+}

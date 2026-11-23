@@ -1,8 +1,7 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { FormulaireListe } from "@/components/formulaire-liste";
+import { LienRetour } from "@/components/lien-retour";
 
 export const metadata: Metadata = {
   title: "Créer une liste de cadeaux",
@@ -12,7 +11,7 @@ export const metadata: Metadata = {
 export default function NouvelleListe() {
   return (
     <main className="pt-6">
-      <Link href="/" className="inline-flex items-center gap-1 text-sm text-doux"><ArrowLeft size={16} /> Accueil</Link>
+      <LienRetour />
       <h1 className="mt-4 font-titre text-3xl font-bold">Créer une liste de cadeaux</h1>
       <p className="mt-1 text-doux">Anniversaire, naissance, mariage… Vos proches réservent, vous gardez la surprise.</p>
       <div className="carte mt-6">

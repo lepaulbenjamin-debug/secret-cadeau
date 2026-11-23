@@ -29,6 +29,7 @@ import { RattacherCompte } from "@/components/rattacher-compte";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { TransfererIdees } from "@/components/transferer-idees";
 import { Souhait, type SouhaitAffiche } from "@/components/souhait";
+import { LienRetour } from "@/components/lien-retour";
 import { assurerNomsDeCode, nomVisible, participantOu404 } from "@/lib/acces";
 import { compteCourant } from "@/lib/compte/session";
 import { compteARebours, dateLongue } from "@/lib/format";
@@ -170,7 +171,7 @@ export default async function EspacePerso({
       <SeSouvenir type="perso" jeton={jeton} groupe={groupe.nom} prenom={moi.prenom} />
 
       <header>
-        <Link href="/" className="text-sm text-doux">← Accueil</Link>
+        <LienRetour />
         <h1 className="mt-4 font-titre text-3xl font-bold">Bonjour {moi.prenom} 👋</h1>
         <p className="text-lg">{groupe.nom}</p>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-doux">

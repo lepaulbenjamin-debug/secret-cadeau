@@ -1,7 +1,6 @@
 import { CalendarDays, Crown, Eye, EyeOff, Link2, Mail, MessageSquare, Pencil, Shuffle, Trash2, UserMinus, Wallet, X } from "lucide-react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import {
@@ -27,6 +26,7 @@ import { Partager } from "@/components/partager";
 import { RattacherCompte } from "@/components/rattacher-compte";
 import { SeSouvenir } from "@/components/se-souvenir";
 import { SupprimerGroupe } from "@/components/supprimer-groupe";
+import { LienRetour } from "@/components/lien-retour";
 import { compteARebours, dateLongue } from "@/lib/format";
 import { assurerNomsDeCode } from "@/lib/acces";
 import { nouveauJeton } from "@/lib/jeton";
@@ -86,7 +86,7 @@ export default async function Organisation({
       <SeSouvenir type="admin" jeton={jeton} groupe={groupe.nom} />
 
       <header>
-        <Link href="/" className="text-sm text-doux">← Accueil</Link>
+        <LienRetour />
         <p className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-cerise"><Crown size={16} /> Espace organisateur</p>
         <h1 className="font-titre text-3xl font-bold">{groupe.nom}</h1>
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-doux">

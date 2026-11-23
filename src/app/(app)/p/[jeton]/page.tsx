@@ -27,6 +27,7 @@ import { QuitterGroupe } from "@/components/quitter-groupe";
 import { Revelation } from "@/components/revelation";
 import { RattacherCompte } from "@/components/rattacher-compte";
 import { SeSouvenir } from "@/components/se-souvenir";
+import { TransfererIdees } from "@/components/transferer-idees";
 import { Souhait, type SouhaitAffiche } from "@/components/souhait";
 import { assurerNomsDeCode, nomVisible, participantOu404 } from "@/lib/acces";
 import { compteCourant } from "@/lib/compte/session";
@@ -351,8 +352,11 @@ export default async function EspacePerso({
           <div className="mt-4 space-y-2 rounded-2xl border border-trait p-4 text-sm">
             <p className="font-semibold">🔗 Liste rattachée : {titreListe(maListe)}</p>
             <p className="text-doux">
-              Ses {maListe.idees.length} idée{maListe.idees.length > 1 ? "s" : ""} s&apos;ajoutent à celles-ci pour votre Père Noël
-              secret, et restent à jour quand vous la modifiez.
+              {maListe.idees.length === 0
+                ? "Elle est vide pour l'instant : ce que vous y ajouterez s'affichera ici pour votre Père Noël secret."
+                : maListe.idees.length === 1
+                  ? "Son idée s'ajoute à celles-ci pour votre Père Noël secret, et reste à jour quand vous modifiez la liste."
+                  : `Ses ${maListe.idees.length} idées s'ajoutent à celles-ci pour votre Père Noël secret, et restent à jour quand vous la modifiez.`}
             </p>
             {maListe.idees.length > 0 && (
               <ul className="divide-y divide-trait">
@@ -360,6 +364,9 @@ export default async function EspacePerso({
                   <Souhait key={i.id} s={i} />
                 ))}
               </ul>
+            )}
+            {mesSouhaits.length > 0 && (
+              <TransfererIdees jeton={jeton} nombre={mesSouhaits.length} titre={titreListe(maListe)} />
             )}
             <div className="flex flex-wrap items-center gap-4">
               <Link href={`/ma-liste/${maListe.jetonProprio}`} className="font-medium text-sapin underline">Modifier cette liste</Link>

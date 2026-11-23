@@ -52,3 +52,58 @@ export async function basculerReservationListe(jeton: string, ideeId: string): P
   }
   revalidatePath("/", "layout");
 }
+
+const MAX_IDEES_LISTE = 80;
+const cle = (t: string) => t.trim().toLowerCase().replace(/\s+/g, " ");
+
+/**
+ * Transfère les idées notées directement dans ce tirage vers la liste rattachée :
+ * elles servent alors à tous les tirages, sans doublon à l'affichage. Une idée
+ * déjà présente dans la liste (même titre ou même lien) n'est pas recopiée. Une
+ * réservation faite dans le groupe suit l'idée (même personne, même anonymat).
+ */
+export async function transfererIdees(jeton: string): Promise<{ erreur?: string; n?: number }> {
+  const moi = await prisma.participant.findUnique({ where: { jeton: String(jeton) }, select: { id: true, listeId: true } });
+  if (!moi) return { erreur: "Lien personnel inconnu." };
+  if (!moi.listeId) return { erreur: "Rattachez d'abord une liste." };
+  const listeId = moi.listeId;
+  const [souhaits, existantes] = await Promise.all([
+    prisma.souhait.findMany({ where: { participantId: moi.id }, orderBy: { creeLe: "asc" } }),
+    prisma.ideeListe.findMany({ where: { listeId }, select: { id: true, titre: true, lien: true, jetonReserve: true } }),
+  ]);
+  if (!souhaits.length) return { n: 0 };
+  const nouvelles = souhaits.filter((s) => !existantes.some((e) => cle(e.titre) === cle(s.titre) || (s.lien && e.lien === s.lien)));
+  if (existantes.length + nouvelles.length > MAX_IDEES_LISTE) {
+    return { erreur: `Votre liste dépasserait ${MAX_IDEES_LISTE} idées : faites un peu de place avant de transférer.` };
+  }
+  const base = Date.now();
+  await prisma.$transaction([
+    // Les doublons : la réservation éventuelle passe sur l'idée déjà dans la liste, si elle est libre.
+    ...souhaits
+      .filter((s) => !nouvelles.includes(s) && s.reserveParId)
+      .flatMap((s) => {
+        const e = existantes.find((x) => cle(x.titre) === cle(s.titre) || (s.lien && x.lien === s.lien));
+        return e && !e.jetonReserve
+          ? [prisma.ideeListe.update({ where: { id: e.id }, data: { jetonReserve: marqueParticipant(s.reserveParId!), reserveLe: new Date() } })]
+          : [];
+      }),
+    ...nouvelles.map((s, i) =>
+      prisma.ideeListe.create({
+        data: {
+          listeId,
+          titre: s.titre,
+          lien: s.lien,
+          image: s.image,
+          prix: s.prix,
+          note: s.note,
+          // Un ordre stable : à la suite de la liste, dans l'ordre du tirage.
+          creeLe: new Date(base + i),
+          ...(s.reserveParId ? { jetonReserve: marqueParticipant(s.reserveParId), reserveLe: new Date() } : {}),
+        },
+      }),
+    ),
+    prisma.souhait.deleteMany({ where: { id: { in: souhaits.map((s) => s.id) } } }),
+  ]);
+  revalidatePath("/", "layout");
+  return { n: nouvelles.length };
+}

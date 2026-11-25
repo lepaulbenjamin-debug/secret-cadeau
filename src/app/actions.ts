@@ -15,7 +15,7 @@ import { dateOuNull, emailFacultatif, entierPositif, lireIdee, texte } from "@/l
 import { messageQuestion, messageReponse } from "@/lib/push";
 import { envoyerPush, signalerNouvellesIdees } from "@/lib/push-serveur";
 import { envoyerAjustements, envoyerBienvenueOrganisateur, envoyerLiensRetrouves, envoyerRappels } from "@/lib/rappels-serveur";
-import { echangerTirages, retirerDuTirage, tirer } from "@/lib/tirage";
+import { echangerTirages, retirerDuTirage, tirageValide, tirer } from "@/lib/tirage";
 
 export type Etat = { erreur?: string; ok?: string } | null;
 
@@ -272,16 +272,28 @@ export async function echangerTirage(jetonAdmin: string, aId: string, bId: strin
   revalidatePath("/", "layout");
 }
 
-export async function basculerExclusion(jetonAdmin: string, x: string, y: string): Promise<Refus> {
+/**
+ * Ajoute une exclusion. ⚠️ JAMAIS UNE BASCULE : choisir deux fois la même paire
+ * (page lente, double clic) retirait l'exclusion sans rien dire, et le tirage
+ * laissait ensuite un couple se tirer. Ajouter est idempotent ; retirer passe par
+ * la croix de l'exclusion (`retirerExclusion`).
+ */
+export async function ajouterExclusion(jetonAdmin: string, x: string, y: string): Promise<Refus> {
   const groupe = await groupeParJetonAdmin(jetonAdmin);
   if (groupe.tirageLe) return { erreur: "Le tirage est fait : annulez-le d'abord." };
-  if (x === y) return;
+  if (x === y) return { erreur: "Choisissez deux personnes différentes." };
   const [aId, bId] = [x, y].sort();
   const membres = await prisma.participant.count({ where: { id: { in: [aId, bId] }, groupeId: groupe.id } });
   if (membres !== 2) return { erreur: "Participant inconnu." };
-  const existante = await prisma.exclusion.findUnique({ where: { aId_bId: { aId, bId } } });
-  if (existante) await prisma.exclusion.delete({ where: { id: existante.id } });
-  else await prisma.exclusion.create({ data: { groupeId: groupe.id, aId, bId } });
+  await prisma.exclusion.upsert({ where: { aId_bId: { aId, bId } }, create: { groupeId: groupe.id, aId, bId }, update: {} });
+  revalidatePath(`/g/${jetonAdmin}`);
+}
+
+export async function retirerExclusion(jetonAdmin: string, x: string, y: string): Promise<Refus> {
+  const groupe = await groupeParJetonAdmin(jetonAdmin);
+  if (groupe.tirageLe) return { erreur: "Le tirage est fait : annulez-le d'abord." };
+  const [aId, bId] = [x, y].sort();
+  await prisma.exclusion.deleteMany({ where: { groupeId: groupe.id, aId, bId } });
   revalidatePath(`/g/${jetonAdmin}`);
 }
 
@@ -306,8 +318,11 @@ export async function lancerTirage(jetonAdmin: string, _etat: Etat, f: FormData)
     };
   }
 
-  const resultat = tirer(participants.map((p) => p.id), exclusions.map((e) => ({ a: e.aId, b: e.bId })));
+  const paires = exclusions.map((e) => ({ a: e.aId, b: e.bId }));
+  const resultat = tirer(participants.map((p) => p.id), paires);
   if (!resultat) return { erreur: "Impossible de faire un tirage avec ces exclusions. Retirez-en une ou deux." };
+  // Garde-fou : on revérifie chaque flèche avant d'enregistrer, quoi qu'il arrive.
+  if (!tirageValide(resultat, paires)) return { erreur: "Le tirage n'a pas pu respecter les exclusions. Relancez-le." };
 
   await prisma.$transaction([
     // Libérer d'abord : `destinataireId` est unique, une écriture croisée échouerait sinon.

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { echangerTirages, retirerDuTirage, tirer } from "./tirage";
+import { echangerTirages, retirerDuTirage, tirageValide, tirer } from "./tirage";
 
 const valide = (ids: string[], r: Map<string, string>, excl: { a: string; b: string }[] = []) => {
   assert.equal(r.size, ids.length);
@@ -108,4 +108,23 @@ test("échange refusé : quelqu'un s'offrirait à lui-même, ou exclusion", () =
   const t2 = new Map([["a", "x"], ["x", "b"], ["b", "y"], ["y", "a"]]);
   assert.equal(echangerTirages(t2, "a", "b", [{ a: "a", b: "y" }]), null);
   assert.equal(echangerTirages(t2, "a", "a"), null);
+});
+
+test("garde-fou : tirageValide refuse une exclusion enfreinte, un auto-tirage ou un doublon", () => {
+  const ex = [{ a: "B", b: "V" }];
+  assert.ok(tirageValide(new Map([["B", "C"], ["C", "V"], ["V", "D"], ["D", "B"]]), ex));
+  assert.ok(!tirageValide(new Map([["B", "C"], ["C", "D"], ["D", "V"], ["V", "B"]]), ex), "V offre à B : interdit");
+  assert.ok(!tirageValide(new Map([["B", "B"], ["C", "D"], ["D", "C"]])), "soi-même");
+  assert.ok(!tirageValide(new Map([["B", "C"], ["C", "B"], ["D", "C"]])), "C reçoit deux fois");
+});
+
+test("1 000 tirages avec exclusions : toujours valides", () => {
+  const ids = ["Benjamin", "Vaness", "Tom", "Léa", "Paul", "Zoé"];
+  const ex = [{ a: "Benjamin", b: "Vaness" }, { a: "Tom", b: "Léa" }];
+  for (let i = 0; i < 1000; i++) {
+    const t = tirer(ids, ex);
+    assert.ok(t && tirageValide(t, ex));
+    assert.notEqual(t!.get("Vaness"), "Benjamin");
+    assert.notEqual(t!.get("Benjamin"), "Vaness");
+  }
 });

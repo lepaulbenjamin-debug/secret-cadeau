@@ -65,6 +65,15 @@ export function tirer(
   return placer(0) ? resultat : null;
 }
 
+/** Chacun offre à une personne différente de lui, chacun reçoit une fois, aucune exclusion n'est enfreinte. */
+export function tirageValide(table: ReadonlyMap<string, string>, exclusions: readonly Paire[] = []): boolean {
+  const interdit = new Set(exclusions.flatMap(({ a, b }) => [`${a}>${b}`, `${b}>${a}`]));
+  const recus = new Set(table.values());
+  if (recus.size !== table.size) return false;
+  for (const [de, pour] of table) if (de === pour || interdit.has(`${de}>${pour}`) || !table.has(pour)) return false;
+  return true;
+}
+
 /**
  * Quelqu'un se désiste après le tirage : on ajuste le moins possible.
  *

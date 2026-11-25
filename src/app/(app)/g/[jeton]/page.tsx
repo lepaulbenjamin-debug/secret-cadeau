@@ -4,15 +4,16 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
 import {
+  ajouterExclusion,
   ajouterParticipants,
   annulerTirage,
-  basculerExclusion,
   desisterApresTirage,
   echangerTirage,
   lancerTirage,
   modifierGroupe,
   modifierParticipant,
   regenererInvitation,
+  retirerExclusion,
   retirerParticipant,
 } from "@/app/actions";
 import { AjoutExclusion } from "@/components/ajout-exclusion";
@@ -320,7 +321,7 @@ export default async function Organisation({
                   {e.a.prenom} ↮ {e.b.prenom}
                   {!tire && (
                     <BoutonAction
-                      action={basculerExclusion.bind(null, jeton, e.aId, e.bId)}
+                      action={retirerExclusion.bind(null, jeton, e.aId, e.bId)}
                       className="grid size-6 place-items-center rounded-full hover:bg-carte"
                       titre="Retirer l'exclusion"
                     >
@@ -335,7 +336,8 @@ export default async function Organisation({
             <div className="mt-4">
               <AjoutExclusion
                 participants={groupe.participants.map(({ id, prenom }) => ({ id, prenom }))}
-                action={basculerExclusion.bind(null, jeton)}
+                existantes={groupe.exclusions.map(({ aId, bId }) => ({ aId, bId }))}
+                action={ajouterExclusion.bind(null, jeton)}
               />
             </div>
           )}

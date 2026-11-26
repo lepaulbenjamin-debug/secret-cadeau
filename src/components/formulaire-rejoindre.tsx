@@ -149,15 +149,15 @@ export function FormulaireRejoindre({ jetonInvitation, groupe }: { jetonInvitati
             <input id="prenom" name="prenom" className="champ" required maxLength={40} autoComplete={pourAutre ? "off" : "given-name"} placeholder={pourAutre ? "Léo" : "Léa"} />
           </div>
           <div>
-            <label className="etiquette" htmlFor="email">{pourAutre ? "Son e-mail" : "E-mail"} <span className="font-normal text-doux">(facultatif)</span></label>
-            <input id="email" name="email" type="email" className="champ" maxLength={120} autoComplete={pourAutre ? "off" : "email"} placeholder={pourAutre ? "" : "lea@exemple.fr"} />
+            <label className="etiquette" htmlFor="email">{pourAutre ? "Son e-mail, ou le vôtre" : "Votre e-mail"}</label>
+            <input id="email" name="email" type="email" className="champ" required maxLength={120} autoComplete="email" placeholder="lea@exemple.fr" />
           </div>
           <div>
             <label className="etiquette" htmlFor="telephone">{pourAutre ? "Son téléphone" : "Téléphone"} <span className="font-normal text-doux">(facultatif)</span></label>
             <input id="telephone" name="telephone" type="tel" className="champ" maxLength={30} autoComplete={pourAutre ? "off" : "tel"} placeholder="06 12 34 56 78" />
             <p className="mt-1 text-sm text-doux">
-              Visibles uniquement par l&apos;organisateur. Avec un e-mail, {pourAutre ? "la personne recevra son" : "vous recevrez votre"} lien au tirage et
-              un rappel avant l&apos;échange.
+              Visibles uniquement par l&apos;organisateur. À cet e-mail, {pourAutre ? "vous recevrez son" : "vous recevrez votre"} lien au tirage et
+              un rappel avant l&apos;échange : vous ne le perdrez pas.
             </p>
           </div>
           <button type="submit" className="bouton bouton-cerise w-full" disabled={enCours}>

@@ -194,7 +194,7 @@ traitent pour notre compte ne comptent pas comme un partage), finalité
 | Catégorie Play | Type | Obligatoire ? | Pourquoi |
 | --- | --- | --- | --- |
 | Informations personnelles | Nom | Oui | le prénom, pour le tirage et les listes |
-| Informations personnelles | Adresse e-mail | Non (facultative) | envoyer les liens et les rappels ; compte facultatif |
+| Informations personnelles | Adresse e-mail | Oui (à l'inscription par lien d'invitation) | envoyer les liens et les rappels ; compte facultatif |
 | Informations personnelles | Numéro de téléphone | Non (facultatif) | permettre à l'organisateur d'envoyer le lien par SMS |
 | Messages | Autres messages dans l'application | Oui | questions anonymes et leurs réponses |
 | Contenus générés par l'utilisateur | Autres contenus | Oui | idées de cadeaux des listes |

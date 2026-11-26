@@ -29,7 +29,7 @@ const QUESTIONS = [
   },
   {
     q: "Comment les participants rejoignent-ils le groupe ?",
-    r: "De deux façons. Soit l'organisateur saisit les prénoms et chacun reçoit un lien personnel et privé, que l'organisateur lui transmet. Soit l'organisateur partage un seul lien d'invitation, et chacun s'inscrit avec son prénom, plus un e-mail ou un téléphone facultatifs, visibles uniquement par l'organisateur.",
+    r: "De deux façons. Soit l'organisateur saisit les prénoms et chacun reçoit un lien personnel et privé, que l'organisateur lui transmet. Soit l'organisateur partage un seul lien d'invitation, et chacun s'inscrit avec son prénom et son e-mail (pour recevoir son lien et le tirage), plus un téléphone facultatif, visibles uniquement par l'organisateur.",
   },
   {
     q: "L'organisateur peut-il voir qui offre à qui ?",
@@ -85,7 +85,7 @@ const QUESTIONS = [
   },
   {
     q: "Quelles données sont conservées ?",
-    r: "Uniquement ce qu'il faut pour faire fonctionner le groupe : son nom, sa date, son budget et son message ; les prénoms (et noms de code en mode mystère) ; l'e-mail ou le téléphone facultatifs, visibles par l'organisateur seul ; le résultat du tirage, visible par chacun pour lui seul ; les listes d'envies, réservations et questions anonymes. Le site n'utilise aucun cookie de mesure d'audience ni de publicité. Le détail figure dans la politique de confidentialité.",
+    r: "Uniquement ce qu'il faut pour faire fonctionner le groupe : son nom, sa date, son budget et son message ; les prénoms (et noms de code en mode mystère) ; l'e-mail (demandé à l'inscription par lien d'invitation) et le téléphone facultatif, visibles par l'organisateur seul ; le résultat du tirage, visible par chacun pour lui seul ; les listes d'envies, réservations et questions anonymes. Le site n'utilise aucun cookie de mesure d'audience ni de publicité. Le détail figure dans la politique de confidentialité.",
   },
   {
     q: "Comment supprimer mes données ?",

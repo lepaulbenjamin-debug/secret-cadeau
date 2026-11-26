@@ -407,6 +407,8 @@ export async function rejoindreGroupe(jetonInvitation: string, _: unknown, f: Fo
   }
   const coordonnees = lireCoordonnees(f);
   if ("erreur" in coordonnees) return coordonnees;
+  // Obligatoire à l'inscription : c'est par là qu'arrivent le lien, le tirage et les rappels.
+  if (!coordonnees.email) return { erreur: "Indiquez une adresse e-mail : vous y recevrez votre lien et le tirage." };
 
   const p = await prisma.participant.create({
     data: {

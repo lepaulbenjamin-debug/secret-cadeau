@@ -38,7 +38,7 @@ export default function Confidentialite() {
           <tr><td>Nom du groupe, date, budget, message</td><td>Organiser l&apos;échange</td><td>Les membres du groupe</td></tr>
           <tr><td>Prénom (et nom de code en mode mystère)</td><td>Faire le tirage, afficher les listes</td><td>Les membres du groupe (seulement le nom de code en mode mystère)</td></tr>
           <tr><td>E-mail de l&apos;organisateur (facultatif)</td><td>Lui envoyer son lien d&apos;organisateur, le relancer si le tirage tarde</td><td>Personne</td></tr>
-          <tr><td>E-mail et téléphone (facultatifs)</td><td>Vous renvoyer votre lien, vous envoyer les rappels</td><td>L&apos;organisateur uniquement</td></tr>
+          <tr><td>E-mail (obligatoire pour s&apos;inscrire avec le lien d&apos;invitation) et téléphone (facultatif)</td><td>Vous renvoyer votre lien, vous envoyer les rappels</td><td>L&apos;organisateur uniquement</td></tr>
           <tr><td>Listes d&apos;anniversaire : prénom, occasion, date, idées, e-mail (facultatif)</td><td>Partager la liste, vous envoyer vos liens</td><td>Les personnes qui ont le lien de la liste (l&apos;e-mail : personne)</td></tr>
           <tr><td>Réservations sur une liste : anonymes (seul un identifiant technique de l&apos;appareil, pour pouvoir annuler)</td><td>Éviter les doublons</td><td>Les autres voient « Déjà réservé », jamais par qui</td></tr>
           <tr><td>Abonnement aux notifications (adresse technique fournie par le navigateur)</td><td>Vous envoyer les notifications que vous avez activées</td><td>Personne ; effacé quand vous les désactivez</td></tr>
